@@ -1,58 +1,89 @@
 package br.edu.ifal.financeproject.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
+import androidx.compose.ui.unit.dp
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = VerdeFloresta,            // foco de campos, links, ícones fortes
+    onPrimary = VerdeNevoa,
+    primaryContainer = VerdeFolha,      // botões principais
+    onPrimaryContainer = VerdeFloresta, // texto sobre botão verde folha (contraste 6.4:1)
+    secondary = VerdeFloresta,
+    onSecondary = VerdeNevoa,
+    secondaryContainer = VerdeFolha,    // indicador da barra de navegação
+    onSecondaryContainer = VerdeFloresta,
+    tertiary = VerdeFolha,
+    onTertiary = VerdeFloresta,
+    background = VerdeNevoa,
+    onBackground = VerdeFloresta,       // contraste 11.5:1
+    surface = Branco,
+    onSurface = VerdeFloresta,
+    surfaceVariant = ContornoSuave,
+    onSurfaceVariant = TextoSecundario,
+    outline = Contorno,
+    outlineVariant = ContornoSuave,
+    inverseSurface = VerdeFloresta,
+    inverseOnSurface = VerdeNevoa,
+    inversePrimary = VerdeFolha,
+    surfaceContainerLowest = Branco,
+    surfaceContainerLow = Branco,
+    surfaceContainer = Branco,
+    surfaceContainerHigh = Branco,
+    surfaceContainerHighest = ContornoSuave
+)
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+private val DarkColorScheme = darkColorScheme(
+    primary = VerdeFolha,
+    onPrimary = VerdeFloresta,
+    primaryContainer = VerdeFolha,
+    onPrimaryContainer = VerdeFloresta,
+    secondary = VerdeFolha,
+    onSecondary = VerdeFloresta,
+    secondaryContainer = VerdeFolha,
+    onSecondaryContainer = VerdeFloresta,
+    tertiary = VerdeFolha,
+    onTertiary = VerdeFloresta,
+    background = VerdeFloresta,
+    onBackground = VerdeNevoa,
+    surface = EscuroSuperficie,
+    onSurface = VerdeNevoa,
+    surfaceVariant = EscuroContorno,
+    onSurfaceVariant = EscuroTextoSecundario,
+    outline = EscuroTextoSecundario,
+    outlineVariant = EscuroContorno,
+    inverseSurface = VerdeNevoa,
+    inverseOnSurface = VerdeFloresta,
+    inversePrimary = VerdeFloresta,
+    surfaceContainerLowest = VerdeFloresta,
+    surfaceContainerLow = EscuroSuperficie,
+    surfaceContainer = EscuroSuperficie,
+    surfaceContainerHigh = EscuroSuperficie,
+    surfaceContainerHighest = EscuroContorno
+)
+
+private val Formas = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(32.dp)
 )
 
 @Composable
 fun FinanceProjectTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
         typography = Typography,
+        shapes = Formas,
         content = content
     )
 }
