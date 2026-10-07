@@ -1,6 +1,7 @@
 package br.edu.ifal.financeproject
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -31,6 +35,9 @@ fun TelaLancamento(
     var valor by rememberSaveable { mutableStateOf("") }
     var data by rememberSaveable { mutableStateOf(dataHoje()) }
     var erro by rememberSaveable { mutableStateOf<String?>(null) }
+    var categoria by rememberSaveable{mutableStateOf("Outros")}
+    var menuExpandido by rememberSaveable {mutableStateOf(false)}
+    var opcoesCategoria = listOf("Alimentação", "Transporte", "Lazer", "Educação", "Outros")
 
     Column(
         modifier = modifier.fillMaxSize().padding(16.dp),
@@ -71,6 +78,37 @@ fun TelaLancamento(
             modifier = Modifier.fillMaxWidth()
         )
 
+        Box(modifier = Modifier.fillMaxWidth()){
+            OutlinedTextField(
+                value = categoria,
+                onValueChange = {},
+                readOnly = true,
+                label = {Text("Categoria")},
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    IconButton(onClick = {menuExpandido = true}){
+                        Text("▼")
+                    }
+                }
+            )
+
+            DropdownMenu(
+                expanded = menuExpandido,
+                onDismissRequest = {menuExpandido = false}
+            ) {
+                opcoesCategoria.forEach { opcao ->
+                    DropdownMenuItem(
+                        text = {Text(opcao)},
+                        onClick = {
+                            categoria = opcao
+                            menuExpandido = false
+                        }
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+
         if (erro != null) {
             Spacer(Modifier.height(8.dp))
             Text(erro!!, color = MaterialTheme.colorScheme.error)
@@ -87,7 +125,7 @@ fun TelaLancamento(
                     data.isBlank() -> erro = "Informe a data."
                     else -> {
                         erro = null
-                        onSalvar(Despesa(titulo = titulo.trim(), valor = valorNumerico, data = data.trim()))
+                        onSalvar(Despesa(titulo = titulo.trim(), valor = valorNumerico, data = data.trim(), categoria = categoria))
                         titulo = ""
                         valor = ""
                         data = dataHoje()

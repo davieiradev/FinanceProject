@@ -8,5 +8,6 @@ data class Despesa (
     val id: Int = 0,
     val titulo: String,
     val valor: Double,
-    val data: String
+    val data: String,
+    val categoria: String = "Outros"
 )
