@@ -1,5 +1,6 @@
 package br.edu.ifal.financeproject
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,15 +36,46 @@ fun TelaResumo(
 
         FluxoCard(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(20.dp)) {
+                val limiteMensal = 2000.00
+                val totalGasto = despesas.sumOf{it.valor}
+                val saldoDisponivel = limiteMensal - totalGasto
+
+                val percentagemGasta = if (limiteMensal > 0) (totalGasto / limiteMensal).toFloat() else 0f
+                val progressoLimpo = percentagemGasta.coerceIn(0f, 1f)
+
                 Text(
-                    "Total gasto até agora",
+                    "Saldo Disponível",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                val corDoSaldo = if (saldoDisponivel >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                 Text(
-                    formatarMoeda(despesas.sumOf { it.valor }),
-                    style = EstiloValorGrande
+                    formatarMoeda(saldoDisponivel),
+                    style = EstiloValorGrande,
+                    color = corDoSaldo
                 )
+
+                Spacer(Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+                    Text("Total gasto : ${formatarMoeda(totalGasto)}", style = MaterialTheme.typography.bodySmall)
+                    Text("Limite: ${formatarMoeda(limiteMensal)}", style = MaterialTheme.typography.bodySmall)
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                LinearProgressIndicator(
+                    progress = {progressoLimpo},
+                    modifier = Modifier.fillMaxWidth().height(12.dp),
+                    color = if (percentagemGasta > 0.9f) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
+                Spacer(Modifier.height(12.dp))
+
                 Text(
                     if (despesas.isEmpty()) "Que tal registrar o seu primeiro gasto?"
                     else "Você já registrou ${despesas.size} despesa(s). Bom trabalho!",
