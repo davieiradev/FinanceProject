@@ -21,7 +21,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.carousel.CarouselDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,22 +45,25 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val dao = AppDataBase.getDatabase(applicationContext).despesaDao()
+        val preferencias = LimitePreferencias(applicationContext)
 
         setContent {
             FinanceProjectTheme {
-                FluxoFinanceApp(dao)
+                FluxoFinanceApp(dao, preferencias)
             }
         }
     }
 }
 
 @Composable
-fun FluxoFinanceApp(dao: DespesaDao) {
+fun FluxoFinanceApp(dao: DespesaDao, preferencias: LimitePreferencias) {
+    var limite by remember { mutableStateOf(preferencias.ler()) }
     var abaAtual by rememberSaveable { mutableStateOf(Aba.RESUMO) }
     val snackbarState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    val despesas by dao.listarTodas().collectAsState(initial = emptyList())
+    val fluxoDespesas = remember(dao) { dao.listarTodas() }
+    val despesas by fluxoDespesas.collectAsState(initial = emptyList())
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarState) },
@@ -81,7 +83,15 @@ fun FluxoFinanceApp(dao: DespesaDao) {
         val modifier = Modifier.padding(innerPadding)
 
         when (abaAtual) {
-            Aba.RESUMO -> TelaResumo(despesas, modifier)
+            Aba.RESUMO -> TelaResumo(
+                despesas = despesas,
+                limite = limite,
+                onSalvarLimite = { valor ->
+                    preferencias.salvar(valor)
+                    limite = valor
+                },
+                modifier = modifier
+            )
 
             Aba.DESPESAS -> TelaDespesas(
                 despesas = despesas,

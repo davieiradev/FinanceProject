@@ -118,7 +118,7 @@ fun TelaLancamento(
 
         Button(
             onClick = {
-                val valorNumerico = valor.replace(",", ".").toDoubleOrNull()
+                val valorNumerico = interpretarValor(valor)
                 when {
                     titulo.isBlank() -> erro = "Informe uma descrição."
                     valorNumerico == null || valorNumerico <= 0 -> erro = "Informe um valor válido."

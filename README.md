@@ -3,6 +3,7 @@
 Aplicativo Android de controle de gastos, simples e acolhedor, feito para quem quer organizar a vida financeira (inclusive quem está endividado). O app permite registrar despesas, acompanhá-las em tempo real e ter uma visão geral do que foi gasto, com persistência local e arquitetura moderna de Android.
 
 ## Funcionalidades
+- **Limite de gastos personalizável**: na aba Resumo, toque em **Definir limite** ou **Alterar limite**. O valor fica salvo no dispositivo e atualiza o saldo disponível e a barra de progresso, considerando todas as despesas cadastradas.
 - **Cadastro de despesas** (descrição, valor e data), com validação dos campos e aceitação de vírgula ou ponto no valor.
 - **Listagem em tempo real** de todas as despesas, da mais recente para a mais antiga, com o total gasto no topo.
 - **Exclusão de despesas**, com confirmação antes de remover.
@@ -66,3 +67,5 @@ O app segue o *Guia de Identidade Visual do Fluxo Finance*:
 4. Clique em "Run" para compilar e executar em um dispositivo físico ou emulador (Virtual Device).
 
 Requisitos: `minSdk` 24 (Android 7.0) e `compileSdk`/`targetSdk` 35.
+
+O banco está na versão 2, com migração da versão 1 que preserva as despesas e adiciona a categoria "Outros" quando esse campo ainda não existe. Atualize o aplicativo sem desinstalá-lo para manter os dados locais.
