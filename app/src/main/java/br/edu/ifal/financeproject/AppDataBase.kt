@@ -7,11 +7,12 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Despesa::class], version = 2)
+@Database(entities = [Despesa::class, Divida::class], version = 2, exportSchema = false)
 
 abstract class AppDataBase : RoomDatabase() {
     abstract fun despesaDao() : DespesaDao
 
+    abstract fun dividaDao() : DividaDao
     companion object{
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {

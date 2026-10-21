@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Card
@@ -38,33 +39,38 @@ import kotlinx.coroutines.launch
 enum class Aba(val titulo: String, val icone: ImageVector) {
     RESUMO("Resumo", Icons.Filled.Home),
     DESPESAS("Despesas", Icons.Filled.List),
+
+    DIVIDAS("Dívidas", Icons.Filled.DateRange ),
     LANCAR("Lançar", Icons.Filled.Add)
 }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val dao = AppDataBase.getDatabase(applicationContext).despesaDao()
+        val despesaDao = AppDataBase.getDatabase(applicationContext).despesaDao()
+        val dividaDao = AppDataBase.getDatabase(applicationContext).dividaDao()
         val preferencias = LimitePreferencias(applicationContext)
 
         setContent {
             FinanceProjectTheme {
-                FluxoFinanceApp(dao, preferencias)
+                FluxoFinanceApp(despesaDao, dividaDao, preferencias)
             }
         }
     }
 }
 
 @Composable
-fun FluxoFinanceApp(dao: DespesaDao, preferencias: LimitePreferencias) {
+fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: LimitePreferencias) {
     var limite by remember { mutableStateOf(preferencias.ler()) }
     var abaAtual by rememberSaveable { mutableStateOf(Aba.RESUMO) }
     val snackbarState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    val fluxoDespesas = remember(dao) { dao.listarTodas() }
+    val fluxoDespesas = remember(despesaDao) { despesaDao.listarTodas() }
     val despesas by fluxoDespesas.collectAsState(initial = emptyList())
 
+    val fluxoDividas = remember(dividaDao){dividaDao.listarTodas()}
+    val dividas by fluxoDividas.collectAsState(initial = emptyList())
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarState) },
         bottomBar = {
@@ -97,8 +103,24 @@ fun FluxoFinanceApp(dao: DespesaDao, preferencias: LimitePreferencias) {
                 despesas = despesas,
                 onExcluir = { despesa ->
                     scope.launch {
-                        dao.deletar(despesa)
+                        despesaDao.deletar(despesa)
                         snackbarState.showSnackbar("Despesa excluída")
+                    }
+                },
+                modifier = modifier
+            )
+
+            Aba.DIVIDAS -> TelaDividas(
+                dividas = dividas,
+                onSalvar = { novaDivida -> scope.launch {
+                    dividaDao.inserir(novaDivida)
+                    snackbarState.showSnackbar(("Dívida registrada!"))
+                }
+                },
+                onExcluir = {divida ->
+                    scope.launch{
+                        dividaDao.deletar(divida)
+                        snackbarState.showSnackbar("Dívida apagada!")
                     }
                 },
                 modifier = modifier
@@ -107,7 +129,7 @@ fun FluxoFinanceApp(dao: DespesaDao, preferencias: LimitePreferencias) {
             Aba.LANCAR -> TelaLancamento(
                 onSalvar = { despesa ->
                     scope.launch {
-                        dao.inserir(despesa)
+                        despesaDao.inserir(despesa)
                         snackbarState.showSnackbar("Despesa salva!")
                     }
                     abaAtual = Aba.DESPESAS
