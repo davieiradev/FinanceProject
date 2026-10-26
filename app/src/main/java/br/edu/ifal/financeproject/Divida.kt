@@ -10,5 +10,6 @@ data class Divida(
     val titulo : String,
     val valor: Double,
     val dataVencimento: String,
-    val paga: Boolean = false
+    val paga: Boolean = false,
+    val categoria: String = "Outros"
 )

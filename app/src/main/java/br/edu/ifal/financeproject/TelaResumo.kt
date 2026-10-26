@@ -18,6 +18,16 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -36,6 +46,7 @@ import br.edu.ifal.financeproject.ui.theme.LogoFluxo
 @Composable
 fun TelaResumo(
     despesas: List<Despesa>,
+    dividas: List<Divida>,
     limite: Double?,
     onSalvarLimite: (Double) -> Unit,
     modifier: Modifier = Modifier
@@ -86,6 +97,49 @@ fun TelaResumo(
             Text("Fluxo Finance", style = MaterialTheme.typography.headlineMedium)
         }
         Spacer(Modifier.height(20.dp))
+
+        val alertas = alertasRecorrencia(despesas, dividas = dividas)
+        if (alertas.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.error),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Warning, contentDescription = null)
+                        Spacer(Modifier.width(12.dp))
+                        Text("Atenção aos gastos e dívidas", style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.weight(1f).semantics { heading() })
+                    }
+                    Text("Algumas categorias aparecem com frequência. Que tal revisar com calma?")
+                    alertas.forEach { alerta ->
+                        Text("${alerta.categoria} • ${alerta.quantidade} registros",
+                            style = MaterialTheme.typography.titleMedium)
+                        Text(formatarMoeda(alerta.total), style = EstiloValorGrande)
+                        Text("Gastos nos últimos 7 dias: ${alerta.quantidadeDespesas} • ${formatarMoeda(alerta.totalDespesas)}")
+                        Text("Dívidas em aberto: ${alerta.quantidadeDividas} • ${formatarMoeda(alerta.totalDividas)}")
+                    }
+                    Text("Aviso a partir de 3 registros na mesma categoria (Lazer ou Outros), somando gastos dos últimos 7 dias e todas as dívidas não pagas, inclusive com vencimento futuro.",
+                        style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            Spacer(Modifier.height(20.dp))
+        }
+
+        val totais = calcularTotais(despesas, dividas)
+        FluxoCard(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Visão geral", style = MaterialTheme.typography.titleLarge)
+                Text("Gastos registrados: ${formatarMoeda(totais.gastos)}")
+                Text("Dívidas cadastradas: ${formatarMoeda(totais.dividas)}")
+                Text("Total acumulado: ${formatarMoeda(totais.acumulado)}", style = EstiloValor)
+                Text("Todos os registros. Dívidas são somadas separadamente e não descontam o limite de gastos.",
+                    style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Spacer(Modifier.height(16.dp))
 
         FluxoCard(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(20.dp)) {

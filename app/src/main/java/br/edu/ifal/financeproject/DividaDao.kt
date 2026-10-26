@@ -15,6 +15,6 @@ interface DividaDao {
     @Delete
     suspend fun deletar(divida: Divida)
 
-    @Query("SELECT * FROM tabela_dividas")
+    @Query("SELECT * FROM tabela_dividas ORDER BY id DESC")
     fun listarTodas(): Flow<List<Divida>>
 }

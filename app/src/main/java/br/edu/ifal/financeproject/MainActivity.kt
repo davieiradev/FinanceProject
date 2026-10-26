@@ -91,6 +91,7 @@ fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: 
         when (abaAtual) {
             Aba.RESUMO -> TelaResumo(
                 despesas = despesas,
+                dividas = dividas,
                 limite = limite,
                 onSalvarLimite = { valor ->
                     preferencias.salvar(valor)
@@ -127,6 +128,7 @@ fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: 
             )
 
             Aba.LANCAR -> TelaLancamento(
+                categoriasMaisUsadas = categoriasFrequentes(despesas.map { it.categoria }),
                 onSalvar = { despesa ->
                     scope.launch {
                         despesaDao.inserir(despesa)
