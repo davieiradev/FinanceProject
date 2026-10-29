@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -38,10 +39,9 @@ import br.edu.ifal.financeproject.ui.theme.FinanceProjectTheme
 import kotlinx.coroutines.launch
 enum class Aba(val titulo: String, val icone: ImageVector) {
     RESUMO("Resumo", Icons.Filled.Home),
-    DESPESAS("Despesas", Icons.Filled.List),
 
-    DIVIDAS("Dívidas", Icons.Filled.DateRange ),
-    LANCAR("Lançar", Icons.Filled.Add)
+    INDICADORES("Economia", Icons.Filled.Info),
+
 }
 
 class MainActivity : ComponentActivity() {
@@ -99,45 +99,7 @@ fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: 
                 },
                 modifier = modifier
             )
-
-            Aba.DESPESAS -> TelaDespesas(
-                despesas = despesas,
-                onExcluir = { despesa ->
-                    scope.launch {
-                        despesaDao.deletar(despesa)
-                        snackbarState.showSnackbar("Despesa excluída")
-                    }
-                },
-                modifier = modifier
-            )
-
-            Aba.DIVIDAS -> TelaDividas(
-                dividas = dividas,
-                onSalvar = { novaDivida -> scope.launch {
-                    dividaDao.inserir(novaDivida)
-                    snackbarState.showSnackbar(("Dívida registrada!"))
-                }
-                },
-                onExcluir = {divida ->
-                    scope.launch{
-                        dividaDao.deletar(divida)
-                        snackbarState.showSnackbar("Dívida apagada!")
-                    }
-                },
-                modifier = modifier
-            )
-
-            Aba.LANCAR -> TelaLancamento(
-                categoriasMaisUsadas = categoriasFrequentes(despesas.map { it.categoria }),
-                onSalvar = { despesa ->
-                    scope.launch {
-                        despesaDao.inserir(despesa)
-                        snackbarState.showSnackbar("Despesa salva!")
-                    }
-                    abaAtual = Aba.DESPESAS
-                },
-                modifier = modifier
-            )
+            Aba.INDICADORES -> TelaIndicadores(modifier = modifier)
         }
     }
 }
