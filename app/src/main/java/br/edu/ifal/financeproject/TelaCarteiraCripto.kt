@@ -1,3 +1,4 @@
+
 package br.edu.ifal.financeproject
 
 import androidx.compose.foundation.layout.Arrangement
@@ -6,15 +7,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.TrendingDown
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import br.edu.ifal.financeproject.CarteiraCripto
 import java.util.Locale
 
 @Composable
@@ -32,6 +39,13 @@ fun TelaCarteiraCripto(
     }
 
     val resultado = valorAtual - totalInvestido
+    val percentual = if (totalInvestido > 0) {
+        (resultado / totalInvestido) * 100
+    } else {
+        0.0
+    }
+
+    val positivo = resultado >= 0
 
     Column(
         modifier = Modifier
@@ -39,28 +53,83 @@ fun TelaCarteiraCripto(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "Minha carteira",
-            style = MaterialTheme.typography.headlineSmall
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Wallet,
+                contentDescription = "Carteira"
+            )
+
+            Text(
+                text = "Minha carteira",
+                style = MaterialTheme.typography.headlineSmall
+            )
+        }
 
         Card(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text("Total investido: ${formatarValor(totalInvestido)} USDT")
-                Text("Valor de referência: ${formatarValor(valorAtual)} USDT")
-                Text("Resultado: ${formatarValor(resultado)} USDT")
+                Text(
+                    text = "Patrimônio de referência",
+                    style = MaterialTheme.typography.labelMedium
+                )
+
+                Text(
+                    text = "${formatarValor(valorAtual)} USDT",
+                    style = MaterialTheme.typography.headlineMedium
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = if (positivo) {
+                            Icons.Filled.TrendingUp
+                        } else {
+                            Icons.Filled.TrendingDown
+                        },
+                        contentDescription = if (positivo) "Ganho" else "Perda",
+                        tint = if (positivo) {
+                            Color(0xFF2E7D32)
+                        } else {
+                            Color(0xFFC62828)
+                        }
+                    )
+
+                    Text(
+                        text = "${if (positivo) "+" else ""}${formatarValor(resultado)} USDT (${formatarValor(percentual)}%)",
+                        color = if (positivo) {
+                            Color(0xFF2E7D32)
+                        } else {
+                            Color(0xFFC62828)
+                        }
+                    )
+                }
+
+                Text(
+                    text = "Total investido: ${formatarValor(totalInvestido)} USDT"
+                )
             }
         }
 
         Text(
-            text = "Criptomoedas",
+            text = "Minhas criptomoedas",
             style = MaterialTheme.typography.titleMedium
         )
+
+        if (carteira.isEmpty()) {
+            Text(
+                text = "Nenhuma criptomoeda encontrada na carteira.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
 
         carteira.forEach { moeda ->
             CartaoCripto(moeda)
@@ -68,7 +137,8 @@ fun TelaCarteiraCripto(
 
         Text(
             text = "Valores demonstrativos armazenados no banco local.",
-            style = MaterialTheme.typography.bodySmall
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -78,6 +148,14 @@ private fun CartaoCripto(moeda: CarteiraCripto) {
     val totalInvestido = moeda.quantidade * moeda.precoMedioCompra
     val valorAtual = moeda.quantidade * moeda.cotacaoReferencia
     val resultado = valorAtual - totalInvestido
+
+    val percentual = if (totalInvestido > 0) {
+        (resultado / totalInvestido) * 100
+    } else {
+        0.0
+    }
+
+    val positivo = resultado >= 0
 
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -109,9 +187,33 @@ private fun CartaoCripto(moeda: CarteiraCripto) {
                 "Valor atual: ${formatarValor(valorAtual)} USDT"
             )
 
-            Text(
-                "Resultado: ${formatarValor(resultado)} USDT"
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = if (positivo) {
+                        Icons.Filled.TrendingUp
+                    } else {
+                        Icons.Filled.TrendingDown
+                    },
+                    contentDescription = if (positivo) "Ganho" else "Perda",
+                    tint = if (positivo) {
+                        Color(0xFF2E7D32)
+                    } else {
+                        Color(0xFFC62828)
+                    }
+                )
+
+                Text(
+                    text = "${if (positivo) "+" else ""}${formatarValor(resultado)} USDT (${formatarValor(percentual)}%)",
+                    color = if (positivo) {
+                        Color(0xFF2E7D32)
+                    } else {
+                        Color(0xFFC62828)
+                    }
+                )
+            }
         }
     }
 }
