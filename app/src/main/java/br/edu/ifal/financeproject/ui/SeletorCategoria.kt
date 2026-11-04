@@ -1,4 +1,4 @@
-package br.edu.ifal.financeproject
+package br.edu.ifal.financeproject.ui
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import br.edu.ifal.financeproject.util.categoriasDisponiveis
 
 @Composable
 fun SeletorCategoria(categoria: String, frequentes: List<String>, onSelecionar: (String) -> Unit) {

@@ -1,4 +1,4 @@
-package br.edu.ifal.financeproject
+package br.edu.ifal.financeproject.ui
 
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -35,6 +33,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import br.edu.ifal.financeproject.model.Divida
+import br.edu.ifal.financeproject.util.categoriasFrequentes
+import br.edu.ifal.financeproject.util.formatarMoeda
+import br.edu.ifal.financeproject.util.interpretarData
+import br.edu.ifal.financeproject.util.interpretarValor
 
 @Composable
 fun TelaDividas(
@@ -78,7 +81,10 @@ fun TelaDividas(
             modifier = Modifier.fillMaxWidth()
         )
 
-        SeletorCategoria(categoria, categoriasFrequentes(dividas.map { it.categoria })) { categoria = it }
+        SeletorCategoria(
+            categoria,
+            categoriasFrequentes(dividas.map { it.categoria })
+        ) { categoria = it }
 
         if (erro!=null){
             Text(erro!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
@@ -92,7 +98,14 @@ fun TelaDividas(
                     erro = "Informe descrição, valor maior que zero e vencimento válido (dd/mm/aaaa)."
                 } else{
                     erro = null
-                    onSalvar(Divida(titulo = titulo.trim(), valor = valorNumerico, dataVencimento = dataVencimento.trim(), categoria = categoria))
+                    onSalvar(
+                        Divida(
+                            titulo = titulo.trim(),
+                            valor = valorNumerico,
+                            dataVencimento = dataVencimento.trim(),
+                            categoria = categoria
+                        )
+                    )
 
                     titulo = ""
                     valor = ""

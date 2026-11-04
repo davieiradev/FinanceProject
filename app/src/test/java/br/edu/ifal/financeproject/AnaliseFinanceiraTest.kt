@@ -1,5 +1,11 @@
 package br.edu.ifal.financeproject
 
+import br.edu.ifal.financeproject.model.Despesa
+import br.edu.ifal.financeproject.model.Divida
+import br.edu.ifal.financeproject.util.alertasRecorrencia
+import br.edu.ifal.financeproject.util.calcularTotais
+import br.edu.ifal.financeproject.util.categoriasFrequentes
+import br.edu.ifal.financeproject.util.interpretarData
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -9,7 +15,13 @@ class AnaliseFinanceiraTest {
 
     @Test fun totaisSomamEReagemARemocao() {
         val despesas = listOf(gasto("26/10/2026", valor = 25.0))
-        val dividas = listOf(Divida(titulo = "Cartão", valor = 100.0, dataVencimento = "01/11/2026"))
+        val dividas = listOf(
+            Divida(
+                titulo = "Cartão",
+                valor = 100.0,
+                dataVencimento = "01/11/2026"
+            )
+        )
         val totais = calcularTotais(despesas, dividas)
         assertEquals(25.0, totais.gastos, 0.001)
         assertEquals(100.0, totais.dividas, 0.001)
@@ -47,7 +59,12 @@ class AnaliseFinanceiraTest {
     @Test fun alertaCombinaGastosEDividasNaMesmaCategoria() {
         val hoje = interpretarData("26/10/2026")!!
         val despesas = listOf(gasto("26/10/2026"), gasto("25/10/2026"))
-        val divida = Divida(titulo = "Parcela", valor = 100.0, dataVencimento = "10/11/2026", categoria = "Lazer")
+        val divida = Divida(
+            titulo = "Parcela",
+            valor = 100.0,
+            dataVencimento = "10/11/2026",
+            categoria = "Lazer"
+        )
         val alerta = alertasRecorrencia(despesas, hoje, listOf(divida)).single()
         assertEquals(3, alerta.quantidade)
         assertEquals(2, alerta.quantidadeDespesas)
@@ -61,12 +78,22 @@ class AnaliseFinanceiraTest {
     }
 
     @Test fun alertaTambemFuncionaSomenteComDividasAbertas() {
-        val dividas = List(3) { Divida(titulo = "Parcela", valor = 50.0, dataVencimento = "10/11/2026", categoria = "Outros") }
+        val dividas = List(3) {
+            Divida(
+                titulo = "Parcela",
+                valor = 50.0,
+                dataVencimento = "10/11/2026",
+                categoria = "Outros"
+            )
+        }
         val alerta = alertasRecorrencia(emptyList(), dividas = dividas).single()
         assertEquals(0, alerta.quantidadeDespesas)
         assertEquals(3, alerta.quantidadeDividas)
         assertEquals(150.0, alerta.total, 0.001)
         assertTrue(alertasRecorrencia(emptyList(), dividas = dividas.take(2)).isEmpty())
-        assertTrue(alertasRecorrencia(emptyList(), dividas = dividas.map { it.copy(categoria = "Educação") }).isEmpty())
+        assertTrue(
+            alertasRecorrencia(
+                emptyList(),
+                dividas = dividas.map { it.copy(categoria = "Educação") }).isEmpty())
     }
 }

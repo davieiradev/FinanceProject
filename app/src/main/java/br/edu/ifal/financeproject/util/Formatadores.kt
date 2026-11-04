@@ -1,4 +1,4 @@
-package br.edu.ifal.financeproject
+package br.edu.ifal.financeproject.util
 
 import java.text.NumberFormat
 import java.text.SimpleDateFormat

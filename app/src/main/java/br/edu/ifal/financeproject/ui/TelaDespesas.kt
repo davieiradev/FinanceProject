@@ -1,4 +1,4 @@
-package br.edu.ifal.financeproject
+package br.edu.ifal.financeproject.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,6 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import br.edu.ifal.financeproject.model.Despesa
+import br.edu.ifal.financeproject.util.formatarMoeda
 import br.edu.ifal.financeproject.ui.theme.EstiloValor
 import br.edu.ifal.financeproject.ui.theme.FluxoCard
 

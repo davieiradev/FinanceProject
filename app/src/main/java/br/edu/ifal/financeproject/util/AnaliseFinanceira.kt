@@ -1,5 +1,7 @@
-package br.edu.ifal.financeproject
+package br.edu.ifal.financeproject.util
 
+import br.edu.ifal.financeproject.model.Despesa
+import br.edu.ifal.financeproject.model.Divida
 import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.util.Calendar

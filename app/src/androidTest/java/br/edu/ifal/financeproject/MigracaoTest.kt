@@ -2,6 +2,8 @@ package br.edu.ifal.financeproject
 
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
+import br.edu.ifal.financeproject.data.AppDataBase
+import br.edu.ifal.financeproject.model.Divida
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -33,8 +35,12 @@ class MigracaoTest {
                     assertEquals("Outros", antiga.categoria)
                     assertEquals(100.0, antiga.valor, 0.001)
                 }
-                banco.dividaDao().inserir(Divida(titulo = "Curso", valor = 50.0,
-                    dataVencimento = "05/11/2026", categoria = "Educação"))
+                banco.dividaDao().inserir(
+                    Divida(
+                        titulo = "Curso", valor = 50.0,
+                        dataVencimento = "05/11/2026", categoria = "Educação"
+                    )
+                )
                 banco.close()
                 banco = abrir()
                 val nova = banco.dividaDao().listarTodas().first().first { it.titulo == "Curso" }

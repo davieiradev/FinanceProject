@@ -1,4 +1,4 @@
-package br.edu.ifal.financeproject
+package br.edu.ifal.financeproject.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -21,19 +22,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
+import br.edu.ifal.financeproject.network.RetrofitClient
 
 @Composable
 fun TelaIndicadores(modifier: Modifier = Modifier){
     var taxaSelic by remember{mutableStateOf("A carregar...")}
+    var taxaSelicNum by remember { mutableStateOf(0.0) }
     var dataAtualizacao by remember {mutableStateOf("")}
     var erro by remember {mutableStateOf<String?>(null)}
+
+    val valorInvestidoMock = 1000.0
 
 LaunchedEffect(Unit){
     try {
         val resposta = RetrofitClient.service.getUltimaSelic()
         if (resposta.isNotEmpty()){
             taxaSelic = resposta[0].valor + "%"
+            taxaSelicNum = resposta[0].valor.toDoubleOrNull() ?: 0.0
             dataAtualizacao = resposta[0].data
         }
     } catch (e: Exception) {
@@ -85,6 +90,48 @@ Column(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(text = erro!!, color = MaterialTheme.colorScheme.error)
             }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    if (taxaSelicNum > 0.0){
+        val rendimentoAtual = valorInvestidoMock * (taxaSelicNum/100)
+        val valorTotal = valorInvestidoMock + rendimentoAtual
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ){
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                 horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Simulador de Rendimento", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Se investir R$1000,00 hoje:",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+                Text(
+                    text = "Em 1 ano terá: R$ ${String.format("%.2f", valorTotal)}",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+
+            Text(
+                text = "(Rendeu R$ ${String.format("%.2f", rendimentoAtual)})",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
         }
     }
 }
