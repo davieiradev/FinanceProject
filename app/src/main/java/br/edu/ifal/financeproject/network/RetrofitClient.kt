@@ -1,12 +1,14 @@
+
 package br.edu.ifal.financeproject.network
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
+
     private const val BASE_URL = "https://api.bcb.gov.br/"
 
-    val service: BcbApiService by lazy{
+    val service: BcbApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())

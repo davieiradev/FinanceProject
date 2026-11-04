@@ -6,6 +6,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import br.edu.ifal.financeproject.CarteiraCripto
+import br.edu.ifal.financeproject.CarteiraCriptoDao
 import br.edu.ifal.financeproject.model.Despesa
 import br.edu.ifal.financeproject.model.Divida
 

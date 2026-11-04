@@ -1,8 +1,15 @@
 package br.edu.ifal.financeproject.ui
 
+
+
+
+import br.edu.ifal.financeproject.ui.theme.FinanceProjectTheme
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Add
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -28,9 +35,7 @@ import br.edu.ifal.financeproject.data.AppDataBase
 import br.edu.ifal.financeproject.data.DespesaDao
 import br.edu.ifal.financeproject.data.DividaDao
 import br.edu.ifal.financeproject.data.LimitePreferencias
-import br.edu.ifal.financeproject.ui.theme.FinanceProjectTheme
-import kotlinx.coroutines.launch
-import androidx.lifecycle.viewmodel.compose.viewModel
+import br.edu.ifal.financeproject.CarteiraCriptoDao
 import br.edu.ifal.financeproject.MercadoCriptoViewModel
 import br.edu.ifal.financeproject.TelaMercadoCripto
 import br.edu.ifal.financeproject.CarteiraCriptoViewModel
