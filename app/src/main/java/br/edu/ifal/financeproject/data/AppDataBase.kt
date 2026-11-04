@@ -9,11 +9,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import br.edu.ifal.financeproject.model.Despesa
 import br.edu.ifal.financeproject.model.Divida
 
-@Database(entities = [Despesa::class, Divida::class], version = 4, exportSchema = false)
+@Database(entities = [Despesa::class, Divida::class, CarteiraCripto::class], version = 4, exportSchema = false)
 
 abstract class AppDataBase : RoomDatabase() {
     abstract fun despesaDao() : DespesaDao
-
+    abstract fun carteiraCriptoDao(): CarteiraCriptoDao
     abstract fun dividaDao() : DividaDao
     companion object{
         val MIGRATION_2_3 = object : Migration(2, 3) {
@@ -47,6 +47,23 @@ abstract class AppDataBase : RoomDatabase() {
                 }
             }
         }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+            CREATE TABLE IF NOT EXISTS tabela_carteira_cripto (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                simbolo TEXT NOT NULL,
+                nome TEXT NOT NULL,
+                quantidade REAL NOT NULL,
+                precoMedioCompra REAL NOT NULL,
+                cotacaoReferencia REAL NOT NULL
+            )
+            """.trimIndent()
+                )
+            }
+        }
         @Volatile
         private var INSTANCE: AppDataBase? = null
 
@@ -56,7 +73,7 @@ abstract class AppDataBase : RoomDatabase() {
                     context.applicationContext,
                     AppDataBase::class.java,
                     "banco_despesas"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
                 INSTANCE = instance
                 instance
