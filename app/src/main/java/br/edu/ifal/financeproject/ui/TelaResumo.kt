@@ -43,7 +43,7 @@ fun TelaResumo(
     despesas: List<Despesa>,
     dividas: List<Divida>,
     limite: Double?,
-    onSalvarLimite: (Double) -> Unit, // Mantido para não quebrar a MainActivity
+    onSalvarLimite: (Double) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {

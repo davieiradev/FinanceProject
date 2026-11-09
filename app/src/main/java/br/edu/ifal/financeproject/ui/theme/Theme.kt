@@ -10,18 +10,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 
 private val LightColorScheme = lightColorScheme(
-    primary = VerdeFloresta,            // foco de campos, links, ícones fortes
+    primary = VerdeFloresta,
     onPrimary = VerdeNevoa,
-    primaryContainer = VerdeFolha,      // botões principais
-    onPrimaryContainer = VerdeFloresta, // texto sobre botão verde folha (contraste 6.4:1)
+    primaryContainer = VerdeFolha,
+    onPrimaryContainer = VerdeFloresta,
     secondary = VerdeFloresta,
     onSecondary = VerdeNevoa,
-    secondaryContainer = VerdeFolha,    // indicador da barra de navegação
+    secondaryContainer = VerdeFolha,
     onSecondaryContainer = VerdeFloresta,
     tertiary = VerdeFolha,
     onTertiary = VerdeFloresta,
     background = VerdeNevoa,
-    onBackground = VerdeFloresta,       // contraste 11.5:1
+    onBackground = VerdeFloresta,
     surface = Branco,
     onSurface = VerdeFloresta,
     surfaceVariant = ContornoSuave,

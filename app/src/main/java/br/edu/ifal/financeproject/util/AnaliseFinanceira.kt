@@ -46,7 +46,6 @@ data class AlertaRecorrencia(
     val total: Double get() = totalDespesas + totalDividas
 }
 
-// Janela de sete dias de calendário, incluindo hoje e excluindo datas futuras.
 fun alertasRecorrencia(
     despesas: List<Despesa>,
     hoje: Date = Date(),
@@ -73,7 +72,6 @@ fun alertasRecorrencia(
         it.categoria in listOf("Lazer", "Outros") && data != null &&
             !data.before(inicio) && data.before(fim)
     }.groupBy { it.categoria }
-    // Vencimento não indica quando a dívida foi contraída: considerar todas as abertas.
     val dividasAbertas = dividas.filter { !it.paga && it.categoria in listOf("Lazer", "Outros") }
         .groupBy { it.categoria }
     return (gastosRecentes.keys + dividasAbertas.keys).mapNotNull { categoria ->
