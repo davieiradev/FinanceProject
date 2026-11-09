@@ -6,7 +6,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-/** Resposta da série 11 do SGS: taxa Selic efetiva, em percentual ao dia. */
 data class TaxaSelicDto(
     @SerializedName("data") val data: String,
     @SerializedName("valor") val valor: String

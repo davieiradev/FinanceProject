@@ -46,7 +46,7 @@ fun calcularCorrecaoSelic(
         val inicioAtraso = primeiroDiaDeAtraso(divida.dataVencimento) ?: return@mapNotNull null
         if (!inicioAtraso.before(hojeSemHorario)) return@mapNotNull null
 
-        // O Banco Central só publica a Selic em dias úteis; por isso contamos apenas as taxas retornadas.
+        // o bacen só publica a Selic em dias úteis, por isso contamos apenas as taxas retornadas
         val taxasDaDivida = taxas.filter { it.data >= inicioAtraso && it.data <= hojeSemHorario }
         val fator = taxasDaDivida.fold(1.0) { acumulado, taxa -> acumulado * (1 + taxa.percentual / 100) }
         val valorCorrigido = divida.valor * fator
