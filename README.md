@@ -68,7 +68,7 @@ O app segue o *Guia de Identidade Visual do Fluxo Finance*:
 
 Requisitos: `minSdk` 24 (Android 7.0) e `compileSdk`/`targetSdk` 35.
 
-O banco está na versão 3. As migrações preservam despesas das versões 1 e 2, criam a tabela de dívidas quando necessário e atribuem a categoria "Outros" às dívidas antigas. Atualize o aplicativo sem desinstalá-lo para manter os dados locais.
+O banco está na versão 5. As migrações preservam os dados anteriores e adicionam as tabelas de dívidas, carteira de criptomoedas e dicas financeiras sem apagar os registros locais. Atualize o aplicativo sem desinstalá-lo para manter os dados locais.
 
 
 ## Iteração 3 — Dívidas, totais, atalhos e alertas
@@ -91,3 +91,10 @@ O banco está na versão 3. As migrações preservam despesas das versões 1 e 2
 8. Repetir cadastro e reabertura em modo avião. Testar formulários com teclado aberto e fonte ampliada.
 
 Testes automatizados: ValorTest e AnaliseFinanceiraTest cobrem valores, datas, totais, frequência, limites da janela e limiar dos alertas. MigracaoTest cobre bancos v1 e as variantes v2, preservação de registros e persistência de dívidas após reabertura. Os testes instrumentados exigem emulador/dispositivo.
+
+## Telas de consulta: dicas financeiras e IPCA
+
+- **Guia financeiro (Room):** a entidade `DicaFinanceira` representa a tabela exclusiva `tabela_dicas_financeiras`. O `DicaFinanceiraDao` consulta a tabela e retorna um `Flow`; o `DicasFinanceirasViewModel` observa esse fluxo e inclui dicas iniciais e novas dicas ainda ausentes, sem duplicar títulos já salvos. As quinze dicas são conteúdo local demonstrativo. A tela `TelaDicasFinanceiras` permite buscá-las por texto e filtrá-las por assunto.
+- **Inflação (IPCA):** a tela é aberta pela ação **Consultar inflação IPCA** na aba Economia. O `BcbApiService` declara uma chamada Retrofit `suspend` para a série SGS 433 do Banco Central, que representa a variação mensal do IPCA. O endpoint solicita os seis valores mais recentes. O `InflacaoIpcaViewModel` faz a chamada com `viewModelScope`, e a interface mostra o resultado mais recente, acumulado composto, média do período, uma comparação visual entre os meses, carregamento, erro e atualização manual.
+- **Coroutines:** o acesso inicial e a leitura das dicas usam funções suspensas/`Flow` do Room, integradas ao ciclo de vida do `ViewModel`. A rede usa uma função `suspend` do Retrofit dentro de `viewModelScope.launch`, evitando bloquear a interface e cancelando o trabalho quando o `ViewModel` é encerrado.
+- **Migração:** a versão 5 do banco inclui `MIGRATION_4_5`, que cria a nova tabela de dicas sem remover despesas, dívidas ou dados da carteira existentes.

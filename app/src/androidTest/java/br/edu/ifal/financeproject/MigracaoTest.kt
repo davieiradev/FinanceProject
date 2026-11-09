@@ -26,7 +26,11 @@ class MigracaoTest {
                 db.version = 2
             }
             fun abrir() = Room.databaseBuilder(context, AppDataBase::class.java, nome)
-                .addMigrations(AppDataBase.MIGRATION_2_3).build()
+                .addMigrations(
+                    AppDataBase.MIGRATION_2_3,
+                    AppDataBase.MIGRATION_3_4,
+                    AppDataBase.MIGRATION_4_5
+                ).build()
             var banco = abrir()
             try {
                 assertEquals("Mercado", banco.despesaDao().listarTodas().first().single().titulo)
@@ -68,7 +72,12 @@ class MigracaoTest {
                 db.version = 1
             }
             val banco = Room.databaseBuilder(context, AppDataBase::class.java, nome)
-                .addMigrations(AppDataBase.MIGRATION_1_2, AppDataBase.MIGRATION_2_3).build()
+                .addMigrations(
+                    AppDataBase.MIGRATION_1_2,
+                    AppDataBase.MIGRATION_2_3,
+                    AppDataBase.MIGRATION_3_4,
+                    AppDataBase.MIGRATION_4_5
+                ).build()
             try {
                 val despesa = banco.despesaDao().listarTodas().first().single()
                 assertEquals("Cinema", despesa.titulo)

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -33,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import br.edu.ifal.financeproject.data.AppDataBase
 import br.edu.ifal.financeproject.data.DespesaDao
+import br.edu.ifal.financeproject.data.DicaFinanceiraDao
 import br.edu.ifal.financeproject.data.DividaDao
 import br.edu.ifal.financeproject.data.LimitePreferencias
 import br.edu.ifal.financeproject.CarteiraCriptoDao
@@ -40,12 +42,18 @@ import br.edu.ifal.financeproject.MercadoCriptoViewModel
 import br.edu.ifal.financeproject.TelaMercadoCripto
 import br.edu.ifal.financeproject.CarteiraCriptoViewModel
 import br.edu.ifal.financeproject.CarteiraCriptoViewModelFactory
+import br.edu.ifal.financeproject.DicasFinanceirasViewModel
+import br.edu.ifal.financeproject.DicasFinanceirasViewModelFactory
+import br.edu.ifal.financeproject.InflacaoIpcaViewModel
+import br.edu.ifal.financeproject.ui.TelaDicasFinanceiras
+import br.edu.ifal.financeproject.ui.TelaInflacaoIpca
 import br.edu.ifal.financeproject.TelaCarteiraCripto
 enum class Aba(val titulo: String, val icone: ImageVector) {
     RESUMO("Resumo", Icons.Filled.Home),
     INDICADORES("Economia", Icons.Filled.Info),
     MERCADO_CRIPTO("Mercado", Icons.Filled.List),
-    CARTEIRA_CRIPTO("Carteira", Icons.Filled.Add)
+    CARTEIRA_CRIPTO("Carteira", Icons.Filled.Add),
+    DICAS_FINANCEIRAS("Dicas", Icons.Filled.Lightbulb)
 }
 
 class MainActivity : ComponentActivity() {
@@ -56,6 +64,7 @@ class MainActivity : ComponentActivity() {
         val despesaDao = database.despesaDao()
         val dividaDao = database.dividaDao()
         val carteiraCriptoDao = database.carteiraCriptoDao()
+        val dicaFinanceiraDao = database.dicaFinanceiraDao()
         val preferencias = LimitePreferencias(applicationContext)
 
         setContent {
@@ -64,7 +73,8 @@ class MainActivity : ComponentActivity() {
                     despesaDao,
                     dividaDao,
                     preferencias,
-                    carteiraCriptoDao
+                    carteiraCriptoDao,
+                    dicaFinanceiraDao
                 )
             }
         }
@@ -72,9 +82,16 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: LimitePreferencias,  carteiraCriptoDao: CarteiraCriptoDao) {
+fun FluxoFinanceApp(
+    despesaDao: DespesaDao,
+    dividaDao: DividaDao,
+    preferencias: LimitePreferencias,
+    carteiraCriptoDao: CarteiraCriptoDao,
+    dicaFinanceiraDao: DicaFinanceiraDao
+) {
     var limite by remember { mutableStateOf(preferencias.ler()) }
     var abaAtual by rememberSaveable { mutableStateOf(Aba.RESUMO) }
+    var mostrandoIpca by rememberSaveable { mutableStateOf(false) }
     val snackbarState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -82,6 +99,9 @@ fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: 
 
     val carteiraViewModel: CarteiraCriptoViewModel = viewModel(
         factory = CarteiraCriptoViewModelFactory(carteiraCriptoDao)
+    )
+    val dicasViewModel: DicasFinanceirasViewModel = viewModel(
+        factory = DicasFinanceirasViewModelFactory(dicaFinanceiraDao)
     )
 
     val fluxoDespesas = remember(despesaDao) { despesaDao.listarTodas() }
@@ -96,7 +116,10 @@ fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: 
                 Aba.entries.forEach { aba ->
                     NavigationBarItem(
                         selected = abaAtual == aba,
-                        onClick = { abaAtual = aba },
+                        onClick = {
+                            abaAtual = aba
+                            if (aba != Aba.INDICADORES) mostrandoIpca = false
+                        },
                         icon = { Icon(aba.icone, contentDescription = aba.titulo) },
                         label = { Text(aba.titulo) }
                     )
@@ -117,13 +140,29 @@ fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: 
                 },
                 modifier = modifier
             )
-            Aba.INDICADORES -> TelaIndicadores(modifier = modifier)
+            Aba.INDICADORES -> if (mostrandoIpca) {
+                val ipcaViewModel: InflacaoIpcaViewModel = viewModel()
+                TelaInflacaoIpca(
+                    viewModel = ipcaViewModel,
+                    onVoltar = { mostrandoIpca = false },
+                    modifier = modifier
+                )
+            } else {
+                TelaIndicadores(
+                    modifier = modifier,
+                    onAbrirIpca = { mostrandoIpca = true }
+                )
+            }
             Aba.MERCADO_CRIPTO -> TelaMercadoCripto(
                 viewModel = mercadoViewModel
             )
 
             Aba.CARTEIRA_CRIPTO -> TelaCarteiraCripto(
                 viewModel = carteiraViewModel
+            )
+            Aba.DICAS_FINANCEIRAS -> TelaDicasFinanceiras(
+                viewModel = dicasViewModel,
+                modifier = modifier
             )
         }
     }
