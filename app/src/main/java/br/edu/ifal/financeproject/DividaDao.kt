@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -14,6 +15,9 @@ interface DividaDao {
 
     @Delete
     suspend fun deletar(divida: Divida)
+
+    @Update
+    suspend fun atualizar(divida: Divida)
 
     @Query("SELECT * FROM tabela_dividas ORDER BY id DESC")
     fun listarTodas(): Flow<List<Divida>>

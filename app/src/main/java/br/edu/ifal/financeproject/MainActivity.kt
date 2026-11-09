@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import br.edu.ifal.financeproject.ui.theme.FinanceProjectTheme
 import kotlinx.coroutines.launch
 enum class Aba(val titulo: String, val icone: ImageVector) {
@@ -44,33 +45,43 @@ enum class Aba(val titulo: String, val icone: ImageVector) {
     LANCAR("Lançar", Icons.Filled.Add)
 }
 
+enum class TelaDivida {
+    ACOMPANHAMENTO,
+    CADASTRO
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val despesaDao = AppDataBase.getDatabase(applicationContext).despesaDao()
-        val dividaDao = AppDataBase.getDatabase(applicationContext).dividaDao()
+        val dividaViewModel = ViewModelProvider(this)[DividaViewModel::class.java]
         val preferencias = LimitePreferencias(applicationContext)
 
         setContent {
             FinanceProjectTheme {
-                FluxoFinanceApp(despesaDao, dividaDao, preferencias)
+                FluxoFinanceApp(despesaDao, dividaViewModel, preferencias)
             }
         }
     }
 }
 
 @Composable
-fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: LimitePreferencias) {
+fun FluxoFinanceApp(
+    despesaDao: DespesaDao,
+    dividaViewModel: DividaViewModel,
+    preferencias: LimitePreferencias
+) {
     var limite by remember { mutableStateOf(preferencias.ler()) }
     var abaAtual by rememberSaveable { mutableStateOf(Aba.RESUMO) }
+    var telaDivida by rememberSaveable { mutableStateOf(TelaDivida.ACOMPANHAMENTO) }
     val snackbarState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     val fluxoDespesas = remember(despesaDao) { despesaDao.listarTodas() }
     val despesas by fluxoDespesas.collectAsState(initial = emptyList())
 
-    val fluxoDividas = remember(dividaDao){dividaDao.listarTodas()}
-    val dividas by fluxoDividas.collectAsState(initial = emptyList())
+    val dividas by dividaViewModel.dividas.collectAsState()
+    val estadoSelic by dividaViewModel.estadoSelic.collectAsState()
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarState) },
         bottomBar = {
@@ -113,17 +124,24 @@ fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: 
 
             Aba.DIVIDAS -> TelaDividas(
                 dividas = dividas,
-                onSalvar = { novaDivida -> scope.launch {
-                    dividaDao.inserir(novaDivida)
-                    snackbarState.showSnackbar(("Dívida registrada!"))
-                }
+                telaAtual = telaDivida,
+                estadoSelic = estadoSelic,
+                onCadastrar = { telaDivida = TelaDivida.CADASTRO },
+                onVoltarParaAcompanhamento = { telaDivida = TelaDivida.ACOMPANHAMENTO },
+                onSalvar = { novaDivida ->
+                    dividaViewModel.salvar(novaDivida)
+                    scope.launch { snackbarState.showSnackbar("Dívida registrada!") }
+                    telaDivida = TelaDivida.ACOMPANHAMENTO
                 },
-                onExcluir = {divida ->
-                    scope.launch{
-                        dividaDao.deletar(divida)
-                        snackbarState.showSnackbar("Dívida apagada!")
-                    }
+                onAtualizar = { divida ->
+                    dividaViewModel.atualizar(divida)
+                    scope.launch { snackbarState.showSnackbar("Dívida marcada como paga!") }
                 },
+                onExcluir = { divida ->
+                    dividaViewModel.excluir(divida)
+                    scope.launch { snackbarState.showSnackbar("Dívida apagada!") }
+                },
+                onAtualizarJuros = dividaViewModel::atualizarJurosComSelic,
                 modifier = modifier
             )
 
