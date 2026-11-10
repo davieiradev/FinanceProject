@@ -115,7 +115,7 @@ fun TelaResumo(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.Warning, contentDescription = null)
                         Spacer(Modifier.width(12.dp))
-                        Text("Atenção aos gastos e dívidas", style = MaterialTheme.typography.titleLarge,
+                        Text("Atenção às despesas e dívidas", style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.weight(1f).semantics { heading() })
                     }
                     Text("Algumas categorias aparecem com frequência. Que tal revisar com calma?")
@@ -123,7 +123,7 @@ fun TelaResumo(
                         Text("${alerta.categoria} • ${alerta.quantidade} registros",
                             style = MaterialTheme.typography.titleMedium)
                         Text(formatarMoeda(alerta.total), style = EstiloValorGrande)
-                        Text("Gastos nos últimos 7 dias: ${alerta.quantidadeDespesas} • ${formatarMoeda(alerta.totalDespesas)}")
+                        Text("Despesas nos últimos 7 dias: ${alerta.quantidadeDespesas} • ${formatarMoeda(alerta.totalDespesas)}")
                         Text("Dívidas em aberto: ${alerta.quantidadeDividas} • ${formatarMoeda(alerta.totalDividas)}")
                     }
                     Text("Aviso a partir de 3 registros na mesma categoria (Lazer ou Outros), somando gastos dos últimos 7 dias e todas as dívidas não pagas, inclusive com vencimento futuro.",
@@ -137,10 +137,10 @@ fun TelaResumo(
         FluxoCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Visão geral", style = MaterialTheme.typography.titleLarge)
-                Text("Gastos registrados: ${formatarMoeda(totais.gastos)}")
+                Text("Despesas registradas: ${formatarMoeda(totais.gastos)}")
                 Text("Dívidas cadastradas: ${formatarMoeda(totais.dividas)}")
                 Text("Total acumulado: ${formatarMoeda(totais.acumulado)}", style = EstiloValor)
-                Text("Todos os registros. Dívidas são somadas separadamente e não descontam o limite de gastos.",
+                Text("Todos os registros. Dívidas são somadas separadamente e não descontam do seu limite.",
                     style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -195,7 +195,7 @@ fun TelaResumo(
                 Spacer(Modifier.height(12.dp))
 
                 Text(
-                    if (despesas.isEmpty()) "Que tal registrar o seu primeiro gasto?"
+                    if (despesas.isEmpty()) "Que tal registrar a sua primeira despesa?"
                     else "Você já registrou ${despesas.size} despesa(s). Bom trabalho!",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -268,7 +268,7 @@ fun TelaResumo(
 
         if (despesas.isEmpty()) {
             Text(
-                "Nada por aqui ainda. Seus gastos aparecerão assim que você lançar.",
+                "Nada por aqui ainda. Suas despesas aparecerão assim que você lançar.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         } else {
