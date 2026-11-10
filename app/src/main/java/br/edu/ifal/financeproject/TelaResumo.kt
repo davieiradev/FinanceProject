@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
@@ -38,6 +39,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.KeyboardType
 import java.util.Locale
+import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.text.ParsePosition
 import br.edu.ifal.financeproject.ui.theme.EstiloValor
 import br.edu.ifal.financeproject.ui.theme.EstiloValorGrande
 import br.edu.ifal.financeproject.ui.theme.FluxoCard
@@ -54,6 +58,7 @@ fun TelaResumo(
     var editarLimite by rememberSaveable { mutableStateOf(false) }
     var valorLimite by rememberSaveable { mutableStateOf("") }
     var erroLimite by rememberSaveable { mutableStateOf<String?>(null) }
+    var periodoSelecionado by rememberSaveable { mutableStateOf("Hoje") }
 
     if (editarLimite) {
         AlertDialog(
@@ -186,7 +191,7 @@ fun TelaResumo(
                     modifier = Modifier.fillMaxWidth().height(12.dp),
                     color = if (percentagemGasta > 0.9f) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    )
+                )
                 Spacer(Modifier.height(12.dp))
 
                 Text(
@@ -195,6 +200,65 @@ fun TelaResumo(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+
+        val hoje = Calendar.getInstance()
+        val inicio = (hoje.clone() as Calendar).apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            when (periodoSelecionado) {
+                "Últimos 7 dias" -> add(Calendar.DAY_OF_YEAR, -6)
+                "Mês atual" -> set(Calendar.DAY_OF_MONTH, 1)
+            }
+        }.timeInMillis
+        val fimExclusivo = (hoje.clone() as Calendar).apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_YEAR, 1)
+        }.timeInMillis
+
+        val despesasFiltradas = despesas.mapNotNull { despesa ->
+            val instante = lerDataDaDespesa(despesa.data)
+            if (instante != null && instante >= inicio && instante < fimExclusivo) {
+                Pair(despesa, instante)
+            } else null
+        }.sortedByDescending { it.second }.map { it.first }
+
+        FluxoCard(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Consultar despesas", style = MaterialTheme.typography.titleLarge)
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+                    listOf("Hoje", "Últimos 7 dias", "Mês atual").forEach { periodo ->
+                        TextButton(onClick = { periodoSelecionado = periodo }) {
+                            Text(if (periodoSelecionado == periodo) "✓ $periodo" else periodo)
+                        }
+                    }
+                }
+                Text(
+                    "Total no período: ${formatarMoeda(despesasFiltradas.sumOf { it.valor })}",
+                    style = EstiloValor
+                )
+                if (despesasFiltradas.isEmpty()) {
+                    Text("Nenhuma despesa encontrada nesse período.")
+                } else {
+                    despesasFiltradas.forEach { despesa ->
+                        Row(
+                            Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(despesa.titulo, style = MaterialTheme.typography.titleMedium)
+                                Text(despesa.data, style = MaterialTheme.typography.bodySmall)
+                            }
+                            Text(formatarMoeda(despesa.valor), style = EstiloValor)
+                        }
+                    }
+                }
             }
         }
 
@@ -226,4 +290,18 @@ fun TelaResumo(
             }
         }
     }
+}
+
+private fun lerDataDaDespesa(texto: String): Long? {
+    val formatos = listOf("dd/MM/yyyy", "yyyy-MM-dd")
+    for (formato in formatos) {
+        val parser = SimpleDateFormat(formato, Locale("pt", "BR"))
+        parser.isLenient = false
+        val posicao = ParsePosition(0)
+        val data = parser.parse(texto.trim(), posicao)
+        if (data != null && posicao.index == texto.trim().length) {
+            return data.time
+        }
+    }
+    return null
 }

@@ -3,19 +3,13 @@ package br.edu.ifal.financeproject
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -30,37 +24,45 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import br.edu.ifal.financeproject.ui.theme.FinanceProjectTheme
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 enum class Aba(val titulo: String, val icone: ImageVector) {
     RESUMO("Resumo", Icons.Filled.Home),
     DESPESAS("Despesas", Icons.Filled.List),
-
-    DIVIDAS("Dívidas", Icons.Filled.DateRange ),
+    DIVIDAS("Dívidas", Icons.Filled.DateRange),
     LANCAR("Lançar", Icons.Filled.Add)
 }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val despesaDao = AppDataBase.getDatabase(applicationContext).despesaDao()
-        val dividaDao = AppDataBase.getDatabase(applicationContext).dividaDao()
+        val banco = AppDataBase.getDatabase(applicationContext)
+        val despesaDao = banco.despesaDao()
+        val dividaDao = banco.dividaDao()
+        val pagamentoDao = banco.pagamentoDividaDao()
         val preferencias = LimitePreferencias(applicationContext)
 
         setContent {
             FinanceProjectTheme {
-                FluxoFinanceApp(despesaDao, dividaDao, preferencias)
+                FluxoFinanceApp(despesaDao, dividaDao, pagamentoDao, preferencias)
             }
         }
     }
 }
 
 @Composable
-fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: LimitePreferencias) {
+fun FluxoFinanceApp(
+    despesaDao: DespesaDao,
+    dividaDao: DividaDao,
+    pagamentoDao: PagamentoDividaDao,
+    preferencias: LimitePreferencias
+) {
     var limite by remember { mutableStateOf(preferencias.ler()) }
     var abaAtual by rememberSaveable { mutableStateOf(Aba.RESUMO) }
     val snackbarState = remember { SnackbarHostState() }
@@ -69,8 +71,12 @@ fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: 
     val fluxoDespesas = remember(despesaDao) { despesaDao.listarTodas() }
     val despesas by fluxoDespesas.collectAsState(initial = emptyList())
 
-    val fluxoDividas = remember(dividaDao){dividaDao.listarTodas()}
+    val fluxoDividas = remember(dividaDao) { dividaDao.listarTodas() }
     val dividas by fluxoDividas.collectAsState(initial = emptyList())
+
+    val fluxoPagamentos = remember(pagamentoDao) { pagamentoDao.listarTodos() }
+    val pagamentos by fluxoPagamentos.collectAsState(initial = emptyList())
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarState) },
         bottomBar = {
@@ -113,15 +119,32 @@ fun FluxoFinanceApp(despesaDao: DespesaDao, dividaDao: DividaDao, preferencias: 
 
             Aba.DIVIDAS -> TelaDividas(
                 dividas = dividas,
-                onSalvar = { novaDivida -> scope.launch {
-                    dividaDao.inserir(novaDivida)
-                    snackbarState.showSnackbar(("Dívida registrada!"))
-                }
+                pagamentos = pagamentos,
+                onSalvar = { novaDivida ->
+                    scope.launch {
+                        dividaDao.inserir(novaDivida)
+                        snackbarState.showSnackbar("Dívida registrada!")
+                    }
                 },
-                onExcluir = {divida ->
-                    scope.launch{
+                onExcluir = { divida ->
+                    scope.launch {
                         dividaDao.deletar(divida)
                         snackbarState.showSnackbar("Dívida apagada!")
+                    }
+                },
+                onRegistrarPagamento = { dividaId, valorPago ->
+                    scope.launch {
+                        try {
+                            val hoje = SimpleDateFormat(
+                                "dd/MM/yyyy", Locale("pt", "BR")
+                            ).format(Date())
+                            pagamentoDao.registrarPagamento(dividaId, valorPago, hoje)
+                            snackbarState.showSnackbar("Pagamento registrado!")
+                        } catch (e: Exception) {
+                            snackbarState.showSnackbar(
+                                "Não foi possível registrar: ${e.message ?: "erro desconhecido"}"
+                            )
+                        }
                     }
                 },
                 modifier = modifier
