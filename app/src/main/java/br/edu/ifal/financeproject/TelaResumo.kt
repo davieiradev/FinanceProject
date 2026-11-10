@@ -52,6 +52,8 @@ fun TelaResumo(
     despesas: List<Despesa>,
     dividas: List<Divida>,
     limite: Double?,
+    notificacoesPermitidas: Boolean,
+    onSolicitarPermissaoDeNotificacao: () -> Unit,
     onSalvarLimite: (Double) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -119,6 +121,11 @@ fun TelaResumo(
                             modifier = Modifier.weight(1f).semantics { heading() })
                     }
                     Text("Algumas categorias aparecem com frequência. Que tal revisar com calma?")
+                    if (!notificacoesPermitidas) {
+                        TextButton(onClick = onSolicitarPermissaoDeNotificacao) {
+                            Text("Ativar lembretes acolhedores")
+                        }
+                    }
                     alertas.forEach { alerta ->
                         Text("${alerta.categoria} • ${alerta.quantidade} registros",
                             style = MaterialTheme.typography.titleMedium)
@@ -259,6 +266,19 @@ fun TelaResumo(
                         }
                     }
                 }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+        FluxoCard(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Gastos por categoria", style = MaterialTheme.typography.titleLarge)
+                Text(
+                    "Gráfico referente a: $periodoSelecionado",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                GraficoGastosPorCategoria(agruparGastosPorCategoria(despesasFiltradas))
             }
         }
 

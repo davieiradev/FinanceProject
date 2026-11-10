@@ -91,3 +91,8 @@ O banco está na versão 3. As migrações preservam despesas das versões 1 e 2
 8. Repetir cadastro e reabertura em modo avião. Testar formulários com teclado aberto e fonte ampliada.
 
 Testes automatizados: ValorTest e AnaliseFinanceiraTest cobrem valores, datas, totais, frequência, limites da janela e limiar dos alertas. MigracaoTest cobre bancos v1 e as variantes v2, preservação de registros e persistência de dívidas após reabertura. Os testes instrumentados exigem emulador/dispositivo.
+
+## Iteração 4 — Lembretes e relatórios
+
+- **#14 Notificações acolhedoras:** ao surgir um alerta de recorrência, o app envia um lembrete com tom amigável e sem cobrança. No Android 13 ou superior, o usuário ativa os lembretes no botão exibido dentro do alerta. O aplicativo cria o canal “Lembretes acolhedores” e evita repetir, no mesmo dia, uma notificação para o mesmo conjunto de alertas. O alerta continua visível no Resumo mesmo que a permissão seja recusada.
+- **#16 Relatórios gráficos simples:** a seção “Gastos por categoria” exibe barras proporcionais ao total de cada categoria. Ela compartilha o período selecionado em “Consultar despesas”: Hoje, Últimos 7 dias ou Mês atual. Sem despesas no período, o app apresenta uma mensagem em vez de um gráfico vazio.
