@@ -2,8 +2,8 @@ package br.edu.ifal.financeproject
 
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
-import br.edu.ifal.financeproject.data.AppDataBase
-import br.edu.ifal.financeproject.model.Divida
+import br.edu.ifal.financeproject.db.AppDataBase
+import br.edu.ifal.financeproject.domain.Divida
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals

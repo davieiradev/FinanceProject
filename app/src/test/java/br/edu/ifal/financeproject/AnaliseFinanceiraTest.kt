@@ -1,7 +1,7 @@
 package br.edu.ifal.financeproject
 
-import br.edu.ifal.financeproject.model.Despesa
-import br.edu.ifal.financeproject.model.Divida
+import br.edu.ifal.financeproject.domain.Despesa
+import br.edu.ifal.financeproject.domain.Divida
 import br.edu.ifal.financeproject.util.alertasRecorrencia
 import br.edu.ifal.financeproject.util.calcularTotais
 import br.edu.ifal.financeproject.util.categoriasFrequentes

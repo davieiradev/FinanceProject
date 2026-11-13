@@ -3,8 +3,8 @@ package br.edu.ifal.financeproject.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import br.edu.ifal.financeproject.data.AppDataBase
-import br.edu.ifal.financeproject.model.Despesa
+import br.edu.ifal.financeproject.db.AppDataBase
+import br.edu.ifal.financeproject.domain.Despesa
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
