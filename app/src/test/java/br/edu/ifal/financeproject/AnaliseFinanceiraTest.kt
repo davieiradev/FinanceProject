@@ -1,15 +1,21 @@
 package br.edu.ifal.financeproject
 
+import br.edu.ifal.financeproject.dados.modelo.GastoAVista
+import br.edu.ifal.financeproject.dados.modelo.GastoComVencimento
+import br.edu.ifal.financeproject.financas.alertasRecorrencia
+import br.edu.ifal.financeproject.financas.calcularTotais
+import br.edu.ifal.financeproject.financas.categoriasFrequentes
+import br.edu.ifal.financeproject.financas.interpretarData
 import org.junit.Assert.*
 import org.junit.Test
 
 class AnaliseFinanceiraTest {
     private fun gasto(data: String, categoria: String = "Lazer", valor: Double = 10.0) =
-        Despesa(titulo = "Teste", valor = valor, data = data, categoria = categoria)
+        GastoAVista(titulo = "Teste", valor = valor, data = data, categoria = categoria)
 
     @Test fun totaisSomamEReagemARemocao() {
         val despesas = listOf(gasto("26/10/2026", valor = 25.0))
-        val dividas = listOf(Divida(titulo = "Cartão", valor = 100.0, dataVencimento = "01/11/2026"))
+        val dividas = listOf(GastoComVencimento(titulo = "Cartão", valor = 100.0, dataVencimento = "01/11/2026"))
         val totais = calcularTotais(despesas, dividas)
         assertEquals(25.0, totais.gastos, 0.001)
         assertEquals(100.0, totais.dividas, 0.001)
@@ -47,7 +53,7 @@ class AnaliseFinanceiraTest {
     @Test fun alertaCombinaGastosEDividasNaMesmaCategoria() {
         val hoje = interpretarData("26/10/2026")!!
         val despesas = listOf(gasto("26/10/2026"), gasto("25/10/2026"))
-        val divida = Divida(titulo = "Parcela", valor = 100.0, dataVencimento = "10/11/2026", categoria = "Lazer")
+        val divida = GastoComVencimento(titulo = "Parcela", valor = 100.0, dataVencimento = "10/11/2026", categoria = "Lazer")
         val alerta = alertasRecorrencia(despesas, hoje, listOf(divida)).single()
         assertEquals(3, alerta.quantidade)
         assertEquals(2, alerta.quantidadeDespesas)
@@ -61,7 +67,7 @@ class AnaliseFinanceiraTest {
     }
 
     @Test fun alertaTambemFuncionaSomenteComDividasAbertas() {
-        val dividas = List(3) { Divida(titulo = "Parcela", valor = 50.0, dataVencimento = "10/11/2026", categoria = "Outros") }
+        val dividas = List(3) { GastoComVencimento(titulo = "Parcela", valor = 50.0, dataVencimento = "10/11/2026", categoria = "Outros") }
         val alerta = alertasRecorrencia(emptyList(), dividas = dividas).single()
         assertEquals(0, alerta.quantidadeDespesas)
         assertEquals(3, alerta.quantidadeDividas)

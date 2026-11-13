@@ -1,5 +1,7 @@
 package br.edu.ifal.financeproject
 
+import br.edu.ifal.financeproject.dados.AppDataBase
+import br.edu.ifal.financeproject.dados.modelo.GastoComVencimento
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.flow.first
@@ -33,7 +35,7 @@ class MigracaoTest {
                     assertEquals("Outros", antiga.categoria)
                     assertEquals(100.0, antiga.valor, 0.001)
                 }
-                banco.dividaDao().inserir(Divida(titulo = "Curso", valor = 50.0,
+                banco.dividaDao().inserir(GastoComVencimento(titulo = "Curso", valor = 50.0,
                     dataVencimento = "05/11/2026", categoria = "Educação"))
                 banco.close()
                 banco = abrir()

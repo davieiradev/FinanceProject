@@ -8,20 +8,21 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 
 private val LightColorScheme = lightColorScheme(
-    primary = VerdeFloresta,            // foco de campos, links, ícones fortes
+    primary = VerdeFloresta,
     onPrimary = VerdeNevoa,
-    primaryContainer = VerdeFolha,      // botões principais
-    onPrimaryContainer = VerdeFloresta, // texto sobre botão verde folha (contraste 6.4:1)
+    primaryContainer = VerdeFolha,
+    onPrimaryContainer = VerdeFloresta,
     secondary = VerdeFloresta,
     onSecondary = VerdeNevoa,
-    secondaryContainer = VerdeFolha,    // indicador da barra de navegação
+    secondaryContainer = VerdeFolha,
     onSecondaryContainer = VerdeFloresta,
     tertiary = VerdeFolha,
     onTertiary = VerdeFloresta,
     background = VerdeNevoa,
-    onBackground = VerdeFloresta,       // contraste 11.5:1
+    onBackground = VerdeFloresta,
     surface = Branco,
     onSurface = VerdeFloresta,
     surfaceVariant = ContornoSuave,
@@ -47,8 +48,8 @@ private val DarkColorScheme = darkColorScheme(
     onSecondary = VerdeFloresta,
     secondaryContainer = VerdeFolha,
     onSecondaryContainer = VerdeFloresta,
-    tertiary = VerdeFolha,
-    onTertiary = VerdeFloresta,
+    tertiary = Color(0xFFAED7FF),
+    onTertiary = Color(0xFF102A44),
     background = VerdeFloresta,
     onBackground = VerdeNevoa,
     surface = EscuroSuperficie,
@@ -87,3 +88,12 @@ fun FinanceProjectTheme(
         content = content
     )
 }
+@Composable
+internal fun corBarraProgresso() =
+    if (MaterialTheme.colorScheme.tertiary == DarkColorScheme.tertiary) MaterialTheme.colorScheme.tertiary
+    else MaterialTheme.colorScheme.primary
+
+@Composable
+internal fun corTrilhaProgresso() =
+    if (MaterialTheme.colorScheme.tertiary == DarkColorScheme.tertiary) Color(0xFF29394C)
+    else MaterialTheme.colorScheme.surfaceVariant
