@@ -7,15 +7,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,7 +30,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import br.edu.ifal.financeproject.dados.modelo.DicaFinanceira
 import br.edu.ifal.financeproject.ui.theme.FluxoCard
+
+private enum class SecaoAprender { TUTORIAL, EDUCACAO_FINANCEIRA }
 
 private data class LicaoFinanceira(
     val id: Int,
@@ -77,44 +86,37 @@ private val licoesFinanceiras = listOf(
 @Composable
 fun TelaEducacaoFinanceira(
     concluidas: Set<Int>,
+    dicas: List<DicaFinanceira>,
     onConcluir: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var secaoAtual by rememberSaveable { mutableStateOf(SecaoAprender.TUTORIAL) }
     var licaoAberta by rememberSaveable { mutableStateOf<Int?>(null) }
-    val totalConcluido = licoesFinanceiras.count { it.id in concluidas }
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
-        Text("Educação financeira", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "$totalConcluido de 4 lições concluídas",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(Modifier.height(8.dp))
-        LinearProgressIndicator(
-            progress = { totalConcluido / 4f },
-            modifier = Modifier.fillMaxWidth()
-        )
+        Text("Aprender", style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(12.dp))
+        TabRow(selectedTabIndex = secaoAtual.ordinal) {
+            Tab(
+                selected = secaoAtual == SecaoAprender.TUTORIAL,
+                onClick = { secaoAtual = SecaoAprender.TUTORIAL },
+                text = { Text("Tutorial") }
+            )
+            Tab(
+                selected = secaoAtual == SecaoAprender.EDUCACAO_FINANCEIRA,
+                onClick = { secaoAtual = SecaoAprender.EDUCACAO_FINANCEIRA },
+                text = { Text("Educação financeira") }
+            )
+        }
         Spacer(Modifier.height(16.dp))
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(licoesFinanceiras, key = { it.id }) { licao ->
-                val concluida = licao.id in concluidas
-                FluxoCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text(
-                            "Lição ${licao.id} • ${licao.titulo}",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            if (concluida) "Concluída" else "Pendente",
-                            color = if (concluida) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        OutlinedButton(onClick = { licaoAberta = licao.id }) { Text("VER LIÇÃO") }
-                    }
-                }
-            }
+        when (secaoAtual) {
+            SecaoAprender.TUTORIAL -> TutorialDoApp(
+                concluidas = concluidas,
+                onAbrirLicao = { licaoAberta = it }
+            )
+
+            SecaoAprender.EDUCACAO_FINANCEIRA -> DicasDeEconomia(dicas)
         }
     }
 
@@ -123,7 +125,10 @@ fun TelaEducacaoFinanceira(
             onDismissRequest = { licaoAberta = null },
             title = { Text(licao.titulo) },
             text = {
-                Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(
+                    Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Text(licao.conteudo)
                     Text("Onde tocar no app", style = MaterialTheme.typography.titleSmall)
                     Text(licao.orientacao)
@@ -141,5 +146,118 @@ fun TelaEducacaoFinanceira(
                 OutlinedButton(onClick = { licaoAberta = null }) { Text("FECHAR") }
             }
         )
+    }
+}
+
+@Composable
+private fun ColumnScope.TutorialDoApp(
+    concluidas: Set<Int>,
+    onAbrirLicao: (Int) -> Unit
+) {
+    val totalConcluido = licoesFinanceiras.count { it.id in concluidas }
+
+    Text("Tutorial", style = MaterialTheme.typography.titleLarge)
+    Spacer(Modifier.height(8.dp))
+    Text(
+        "$totalConcluido de 4 lições concluídas",
+        style = MaterialTheme.typography.titleMedium
+    )
+    Spacer(Modifier.height(8.dp))
+    LinearProgressIndicator(
+        progress = { totalConcluido / 4f },
+        modifier = Modifier.fillMaxWidth()
+    )
+    Spacer(Modifier.height(16.dp))
+
+    LazyColumn(
+        modifier = Modifier.weight(1f),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(licoesFinanceiras, key = { it.id }) { licao ->
+            val concluida = licao.id in concluidas
+            FluxoCard(modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(
+                        "Lição ${licao.id} • ${licao.titulo}",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        if (concluida) "Concluída" else "Pendente",
+                        color = if (concluida) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedButton(onClick = { onAbrirLicao(licao.id) }) {
+                        Text("VER LIÇÃO")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.DicasDeEconomia(dicas: List<DicaFinanceira>) {
+    var textoBusca by rememberSaveable { mutableStateOf("") }
+    var categoriaSelecionada by rememberSaveable { mutableStateOf("Todas") }
+    val categorias = listOf("Todas") + dicas.map { it.categoria }.distinct().sorted()
+    val dicasFiltradas = dicas.filter { dica ->
+        val atendeCategoria = categoriaSelecionada == "Todas" || dica.categoria == categoriaSelecionada
+        val atendeBusca = textoBusca.isBlank() || listOf(dica.titulo, dica.descricao)
+            .any { texto -> texto.contains(textoBusca, ignoreCase = true) }
+        atendeCategoria && atendeBusca
+    }
+
+    Text("Educação financeira", style = MaterialTheme.typography.titleLarge)
+    Spacer(Modifier.height(4.dp))
+    Text(
+        "Dicas práticas para organizar suas finanças.",
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    Spacer(Modifier.height(12.dp))
+    OutlinedTextField(
+        value = textoBusca,
+        onValueChange = { textoBusca = it },
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text("Buscar dicas") },
+        singleLine = true
+    )
+    Spacer(Modifier.height(12.dp))
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(categorias, key = { it }) { categoria ->
+            FilterChip(
+                selected = categoria == categoriaSelecionada,
+                onClick = { categoriaSelecionada = categoria },
+                label = { Text(categoria) }
+            )
+        }
+    }
+    Spacer(Modifier.height(12.dp))
+
+    LazyColumn(
+        modifier = Modifier.weight(1f),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        if (dicasFiltradas.isEmpty()) {
+            item {
+                Text(
+                    "Nenhuma dica encontrada.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            items(dicasFiltradas, key = { it.id }) { dica ->
+                FluxoCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(dica.titulo, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            dica.categoria,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(dica.descricao)
+                    }
+                }
+            }
+        }
     }
 }

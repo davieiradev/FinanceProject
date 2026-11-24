@@ -39,6 +39,7 @@ import androidx.work.WorkManager
 import br.edu.ifal.financeproject.dados.AppDataBase
 import br.edu.ifal.financeproject.dados.LimitePreferencias
 import br.edu.ifal.financeproject.dados.dao.GastoDao
+import br.edu.ifal.financeproject.dados.dao.DicaFinanceiraDao
 import br.edu.ifal.financeproject.dados.dao.ProgressoLicaoDao
 import br.edu.ifal.financeproject.dados.modelo.ProgressoLicao
 import br.edu.ifal.financeproject.financas.categoriasFrequentes
@@ -86,6 +87,7 @@ class MainActivity : ComponentActivity() {
         }
         val banco = AppDataBase.getDatabase(applicationContext)
         val gastoDao = banco.gastoDao()
+        val dicaFinanceiraDao = banco.dicaFinanceiraDao()
         val preferencias = LimitePreferencias(applicationContext)
         val progressoDao = AppDataBase.getDatabase(
             applicationContext
@@ -97,6 +99,7 @@ class MainActivity : ComponentActivity() {
                     gastoDao,
                     preferencias,
                     progressoDao = progressoDao,
+                    dicaFinanceiraDao = dicaFinanceiraDao,
                     notificacoesPermitidas = podeNotificar,
                     onSolicitarPermissaoDeNotificacao = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -120,7 +123,8 @@ fun FluxoFinanceApp(
     preferencias: LimitePreferencias,
     notificacoesPermitidas: Boolean,
     onSolicitarPermissaoDeNotificacao: () -> Unit,
-    progressoDao: ProgressoLicaoDao
+    progressoDao: ProgressoLicaoDao,
+    dicaFinanceiraDao: DicaFinanceiraDao
 ) {
     var limite by remember { mutableStateOf(preferencias.ler()) }
     var abaAtual by rememberSaveable { mutableStateOf(Aba.RESUMO) }
@@ -133,6 +137,8 @@ fun FluxoFinanceApp(
 
     val fluxoProgresso = remember(progressoDao) { progressoDao.observarProgresso() }
     val progresso by fluxoProgresso.collectAsState(initial = emptyList())
+    val fluxoDicas = remember(dicaFinanceiraDao) { dicaFinanceiraDao.observarTodas() }
+    val dicas by fluxoDicas.collectAsState(initial = emptyList())
 
     LaunchedEffect(registros, notificacoesPermitidas) {
         if (notificacoesPermitidas) verificarAlertas(context, registros)
@@ -200,6 +206,7 @@ fun FluxoFinanceApp(
 
             Aba.APRENDER -> TelaEducacaoFinanceira(
                 concluidas = progresso.filter { it.concluida }.map { it.licaoId }.toSet(),
+                dicas = dicas,
                 onConcluir = { id ->
                     scope.launch { progressoDao.marcarConcluida(ProgressoLicao(id)) }
                 },
