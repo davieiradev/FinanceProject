@@ -1,19 +1,5 @@
 package br.edu.ifal.financeproject
 
-import br.edu.ifal.financeproject.dados.AppDataBase
-import br.edu.ifal.financeproject.dados.GastoAVistaDao
-import br.edu.ifal.financeproject.dados.GastoComVencimentoDao
-import br.edu.ifal.financeproject.dados.LimitePreferencias
-import br.edu.ifal.financeproject.dados.modelo.GastoAVista
-import br.edu.ifal.financeproject.dados.PagamentoGastoDao
-import br.edu.ifal.financeproject.financas.alertasRecorrencia
-import br.edu.ifal.financeproject.financas.categoriasFrequentes
-import br.edu.ifal.financeproject.notificacoes.configurarCanalDeAlertas
-import br.edu.ifal.financeproject.notificacoes.enviarAlertaAcolhedor
-import br.edu.ifal.financeproject.notificacoes.notificacoesPermitidas
-import br.edu.ifal.financeproject.ui.telas.TelaGastos
-import br.edu.ifal.financeproject.ui.telas.TelaLancamento
-import br.edu.ifal.financeproject.ui.telas.TelaResumo
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -24,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Icon
@@ -58,7 +45,8 @@ import java.util.concurrent.TimeUnit
 
 enum class Aba(val titulo: String, val icone: ImageVector) {
     RESUMO("Resumo", Icons.Filled.Home),
-    GASTOS("Gastos", Icons.Filled.List),
+    DESPESAS("Despesas", Icons.Filled.List),
+    DIVIDAS("Dívidas", Icons.Filled.DateRange),
     LANCAR("Lançar", Icons.Filled.Add)
 }
 
@@ -115,9 +103,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun FluxoFinanceApp(
-    despesaDao: GastoAVistaDao,
-    dividaDao: GastoComVencimentoDao,
-    pagamentoDao: PagamentoGastoDao,
+    despesaDao: DespesaDao,
+    dividaDao: DividaDao,
+    pagamentoDao: PagamentoDividaDao,
     preferencias: LimitePreferencias,
     notificacoesPermitidas: Boolean,
     onSolicitarPermissaoDeNotificacao: () -> Unit
@@ -164,7 +152,6 @@ fun FluxoFinanceApp(
             Aba.RESUMO -> TelaResumo(
                 despesas = despesas,
                 dividas = dividas,
-                pagamentos = pagamentos,
                 limite = limite,
                 notificacoesPermitidas = notificacoesPermitidas,
                 onSolicitarPermissaoDeNotificacao = onSolicitarPermissaoDeNotificacao,
@@ -175,21 +162,30 @@ fun FluxoFinanceApp(
                 modifier = modifier
             )
 
-            Aba.GASTOS -> TelaGastos(
+            Aba.DESPESAS -> TelaDespesas(
                 despesas = despesas,
-                onExcluirDespesa = { despesa ->
+                onExcluir = { despesa ->
                     scope.launch {
                         despesaDao.deletar(despesa)
-                        snackbarState.showSnackbar("GastoAVista excluída")
+                        snackbarState.showSnackbar("Despesa excluída")
                     }
                 },
+                modifier = modifier
+            )
 
+            Aba.DIVIDAS -> TelaDividas(
                 dividas = dividas,
                 pagamentos = pagamentos,
-                onExcluirDivida = { divida ->
+                onSalvar = { novaDivida ->
+                    scope.launch {
+                        dividaDao.inserir(novaDivida)
+                        snackbarState.showSnackbar("Dívida registrada!")
+                    }
+                },
+                onExcluir = { divida ->
                     scope.launch {
                         dividaDao.deletar(divida)
-                        snackbarState.showSnackbar("Gasto excluído!")
+                        snackbarState.showSnackbar("Dívida apagada!")
                     }
                 },
                 onRegistrarPagamento = { dividaId, valorPago ->
@@ -211,20 +207,13 @@ fun FluxoFinanceApp(
             )
 
             Aba.LANCAR -> TelaLancamento(
-                categoriasMaisUsadas = categoriasFrequentes(despesas.map { it.categoria } + dividas.map { it.categoria }),
-                onSalvarDespesa = { despesa ->
+                categoriasMaisUsadas = categoriasFrequentes(despesas.map { it.categoria }),
+                onSalvar = { despesa ->
                     scope.launch {
                         despesaDao.inserir(despesa)
-                        abaAtual = Aba.GASTOS
-                        snackbarState.showSnackbar("GastoAVista salva!")
+                        snackbarState.showSnackbar("Despesa salva!")
                     }
-                },
-                onSalvarDividas = { novasDividas ->
-                    scope.launch {
-                        dividaDao.inserirTodas(novasDividas)
-                        abaAtual = Aba.GASTOS
-                        snackbarState.showSnackbar("Gasto com vencimento registrado!")
-                    }
+                    abaAtual = Aba.DESPESAS
                 },
                 modifier = modifier
             )
