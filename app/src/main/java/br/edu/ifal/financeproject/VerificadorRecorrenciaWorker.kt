@@ -3,6 +3,8 @@ package br.edu.ifal.financeproject
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import br.edu.ifal.financeproject.dados.AppDataBase
+import br.edu.ifal.financeproject.notificacoes.verificarAlertas
 import kotlinx.coroutines.flow.first
 
 class VerificadorRecorrenciaWorker(
@@ -14,26 +16,7 @@ class VerificadorRecorrenciaWorker(
         return try {
             val banco = AppDataBase.getDatabase(applicationContext)
 
-            val despesas = banco.despesaDao()
-                .listarTodas()
-                .first()
-
-            val dividas = banco.dividaDao()
-                .listarTodas()
-                .first()
-
-            val alertas = alertasRecorrencia(
-                despesas = despesas,
-                dividas = dividas
-            )
-
-            configurarCanalDeAlertas(applicationContext)
-
-            enviarAlertaAcolhedor(
-                applicationContext,
-                alertas
-            )
-
+            verificarAlertas(applicationContext, banco.gastoDao().observar().first())
             Result.success()
 
         } catch (e: Exception) {

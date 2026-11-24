@@ -1,4 +1,4 @@
-package br.edu.ifal.financeproject
+package br.edu.ifal.financeproject.dados.modelo
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

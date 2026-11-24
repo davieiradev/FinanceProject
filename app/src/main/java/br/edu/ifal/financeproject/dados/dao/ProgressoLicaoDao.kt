@@ -1,9 +1,10 @@
-package br.edu.ifal.financeproject
+package br.edu.ifal.financeproject.dados.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import br.edu.ifal.financeproject.dados.modelo.ProgressoLicao
 import kotlinx.coroutines.flow.Flow
 
 @Dao

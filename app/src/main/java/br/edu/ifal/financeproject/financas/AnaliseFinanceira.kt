@@ -1,12 +1,13 @@
-package br.edu.ifal.financeproject
+package br.edu.ifal.financeproject.financas
 
+import br.edu.ifal.financeproject.dados.modelo.Gasto
 import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-val categoriasDisponiveis = listOf("Alimentação", "Transporte", "Lazer", "Educação", "Outros")
+val categoriasDisponiveis = listOf("Alimentação", "Transporte", "Lazer", "Educação", "Saúde", "Outros")
 
 fun interpretarData(texto: String): Date? {
     val entrada = texto.trim()
@@ -24,31 +25,12 @@ fun categoriasFrequentes(categorias: List<String>): List<String> = categorias
     .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
     .take(3).map { it.key }
 
-data class TotaisFinanceiros(val gastos: Double, val dividas: Double) {
-    val acumulado: Double get() = gastos + dividas
-}
-
-fun calcularTotais(despesas: List<Despesa>, dividas: List<Divida>) = TotaisFinanceiros(
-    gastos = despesas.sumOf { it.valor },
-    dividas = dividas.sumOf { it.valor }
-)
-
-data class AlertaRecorrencia(
-    val categoria: String,
-    val quantidadeDespesas: Int,
-    val quantidadeDividas: Int,
-    val totalDespesas: Double,
-    val totalDividas: Double
-) {
-    val quantidade: Int get() = quantidadeDespesas + quantidadeDividas
-    val total: Double get() = totalDespesas + totalDividas
-}
+data class AlertaRecorrencia(val categoria: String, val quantidade: Int, val total: Double)
 
 // Janela de sete dias de calendário, incluindo hoje e excluindo datas futuras.
 fun alertasRecorrencia(
-    despesas: List<Despesa>,
-    hoje: Date = Date(),
-    dividas: List<Divida> = emptyList()
+    gastos: List<Gasto>,
+    hoje: Date = Date()
 ): List<AlertaRecorrencia> {
     val inicio = Calendar.getInstance().apply {
         time = hoje
@@ -66,20 +48,12 @@ fun alertasRecorrencia(
         set(Calendar.MILLISECOND, 0)
         add(Calendar.DAY_OF_YEAR, 1)
     }.time
-    val gastosRecentes = despesas.filter {
+    val gastosRecentes = gastos.filter {
         val data = interpretarData(it.data)
         it.categoria in listOf("Lazer", "Outros") && data != null &&
             !data.before(inicio) && data.before(fim)
     }.groupBy { it.categoria }
-    // Vencimento não indica quando a dívida foi contraída: considerar todas as abertas.
-    val dividasAbertas = dividas.filter { !it.paga && it.categoria in listOf("Lazer", "Outros") }
-        .groupBy { it.categoria }
-    return (gastosRecentes.keys + dividasAbertas.keys).mapNotNull { categoria ->
-        val gastos = gastosRecentes[categoria].orEmpty()
-        val pendencias = dividasAbertas[categoria].orEmpty()
-        if (gastos.size + pendencias.size >= 3) {
-            AlertaRecorrencia(categoria, gastos.size, pendencias.size,
-                gastos.sumOf { it.valor }, pendencias.sumOf { it.valor })
-        } else null
+    return gastosRecentes.filterValues { it.size >= 3 }.map { (categoria, itens) ->
+        AlertaRecorrencia(categoria, itens.size, itens.sumOf { it.valor })
     }.sortedBy { it.categoria }
 }

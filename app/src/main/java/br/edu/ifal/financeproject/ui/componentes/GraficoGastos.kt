@@ -1,4 +1,4 @@
-package br.edu.ifal.financeproject
+package br.edu.ifal.financeproject.ui.componentes
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,11 +14,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import br.edu.ifal.financeproject.dados.modelo.Gasto
+import br.edu.ifal.financeproject.financas.formatarMoeda
 import br.edu.ifal.financeproject.ui.theme.EstiloValor
 
 data class GastoPorCategoria(val categoria: String, val total: Double)
 
-fun agruparGastosPorCategoria(despesas: List<Despesa>): List<GastoPorCategoria> = despesas
+fun agruparGastosPorCategoria(gastos: List<Gasto>): List<GastoPorCategoria> = gastos
     .groupBy { it.categoria }
     .map { (categoria, gastos) -> GastoPorCategoria(categoria, gastos.sumOf { it.valor }) }
     .sortedByDescending { it.total }
@@ -27,12 +28,12 @@ fun agruparGastosPorCategoria(despesas: List<Despesa>): List<GastoPorCategoria> 
 @Composable
 fun GraficoGastosPorCategoria(valores: List<GastoPorCategoria>) {
     if (valores.isEmpty()) {
-        Text("Registre despesas no período escolhido para ver o gráfico.")
+        Text("Registre gastos no período escolhido para ver o gráfico.")
         return
     }
 
     val maiorValor = valores.maxOf { it.total }
-    val corBarra = MaterialTheme.colorScheme.primary
+    val corBarra = MaterialTheme.colorScheme.tertiary
     val corTrilha = MaterialTheme.colorScheme.surfaceVariant
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

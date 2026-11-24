@@ -1,6 +1,5 @@
-package br.edu.ifal.financeproject
+package br.edu.ifal.financeproject.financas
 
-import br.edu.ifal.financeproject.financas.interpretarValor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

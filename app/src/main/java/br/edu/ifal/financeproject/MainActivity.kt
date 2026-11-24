@@ -10,7 +10,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
@@ -30,24 +29,35 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.core.content.ContextCompat
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import br.edu.ifal.financeproject.ui.theme.FinanceProjectTheme
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import androidx.core.content.ContextCompat
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import br.edu.ifal.financeproject.dados.AppDataBase
+import br.edu.ifal.financeproject.dados.LimitePreferencias
+import br.edu.ifal.financeproject.dados.dao.GastoDao
+import br.edu.ifal.financeproject.dados.dao.ProgressoLicaoDao
+import br.edu.ifal.financeproject.dados.modelo.ProgressoLicao
+import br.edu.ifal.financeproject.financas.categoriasFrequentes
+import br.edu.ifal.financeproject.financas.dataHoje
+import br.edu.ifal.financeproject.notificacoes.cancelarLembrete
+import br.edu.ifal.financeproject.notificacoes.configurarCanalDeAlertas
+import br.edu.ifal.financeproject.notificacoes.notificacoesPermitidas
+import br.edu.ifal.financeproject.notificacoes.verificarAlertas
+import br.edu.ifal.financeproject.ui.telas.TelaEducacaoFinanceira
+import br.edu.ifal.financeproject.ui.telas.TelaGastos
+import br.edu.ifal.financeproject.ui.telas.TelaLancamento
+import br.edu.ifal.financeproject.ui.telas.TelaResumo
+import br.edu.ifal.financeproject.ui.theme.FinanceProjectTheme
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.launch
 
 enum class Aba(val titulo: String, val icone: ImageVector) {
     RESUMO("Resumo", Icons.Filled.Home),
-    DESPESAS("Despesas", Icons.Filled.List),
-    DIVIDAS("Dívidas", Icons.Filled.DateRange),
+    GASTOS("Gastos", Icons.Filled.List),
     LANCAR("Lançar", Icons.Filled.Add),
 
     APRENDER("Aprender", Icons.Filled.Info)
@@ -75,9 +85,7 @@ class MainActivity : ComponentActivity() {
             podeNotificar = concedida
         }
         val banco = AppDataBase.getDatabase(applicationContext)
-        val despesaDao = banco.despesaDao()
-        val dividaDao = banco.dividaDao()
-        val pagamentoDao = banco.pagamentoDividaDao()
+        val gastoDao = banco.gastoDao()
         val preferencias = LimitePreferencias(applicationContext)
         val progressoDao = AppDataBase.getDatabase(
             applicationContext
@@ -86,9 +94,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             FinanceProjectTheme {
                 FluxoFinanceApp(
-                    despesaDao,
-                    dividaDao,
-                    pagamentoDao,
+                    gastoDao,
                     preferencias,
                     progressoDao = progressoDao,
                     notificacoesPermitidas = podeNotificar,
@@ -110,9 +116,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun FluxoFinanceApp(
-    despesaDao: DespesaDao,
-    dividaDao: DividaDao,
-    pagamentoDao: PagamentoDividaDao,
+    gastoDao: GastoDao,
     preferencias: LimitePreferencias,
     notificacoesPermitidas: Boolean,
     onSolicitarPermissaoDeNotificacao: () -> Unit,
@@ -123,23 +127,15 @@ fun FluxoFinanceApp(
     val snackbarState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    val fluxoDespesas = remember(despesaDao) { despesaDao.listarTodas() }
-    val despesas by fluxoDespesas.collectAsState(initial = emptyList())
-
-    val fluxoDividas = remember(dividaDao) { dividaDao.listarTodas() }
-    val dividas by fluxoDividas.collectAsState(initial = emptyList())
-
-    val fluxoPagamentos = remember(pagamentoDao) { pagamentoDao.listarTodos() }
-    val pagamentos by fluxoPagamentos.collectAsState(initial = emptyList())
+    val fluxoGastos = remember(gastoDao) { gastoDao.observar() }
+    val registros by fluxoGastos.collectAsState(initial = emptyList())
     val context = LocalContext.current
 
     val fluxoProgresso = remember(progressoDao) { progressoDao.observarProgresso() }
     val progresso by fluxoProgresso.collectAsState(initial = emptyList())
 
-    LaunchedEffect(despesas, dividas, notificacoesPermitidas) {
-        if (notificacoesPermitidas) {
-            enviarAlertaAcolhedor(context, alertasRecorrencia(despesas, dividas = dividas))
-        }
+    LaunchedEffect(registros, notificacoesPermitidas) {
+        if (notificacoesPermitidas) verificarAlertas(context, registros)
     }
 
     Scaffold(
@@ -161,8 +157,7 @@ fun FluxoFinanceApp(
 
         when (abaAtual) {
             Aba.RESUMO -> TelaResumo(
-                despesas = despesas,
-                dividas = dividas,
+                registros = registros,
                 limite = limite,
                 notificacoesPermitidas = notificacoesPermitidas,
                 onSolicitarPermissaoDeNotificacao = onSolicitarPermissaoDeNotificacao,
@@ -173,44 +168,20 @@ fun FluxoFinanceApp(
                 modifier = modifier
             )
 
-            Aba.DESPESAS -> TelaDespesas(
-                despesas = despesas,
-                onExcluir = { despesa ->
+            Aba.GASTOS -> TelaGastos(
+                registros = registros,
+                onExcluir = { gasto ->
                     scope.launch {
-                        despesaDao.deletar(despesa)
-                        snackbarState.showSnackbar("Despesa excluída")
+                        gastoDao.excluir(gasto.gasto)
+                        gasto.parcelas.forEach { cancelarLembrete(context, it) }
+                        snackbarState.showSnackbar("Gasto excluído")
                     }
                 },
-                modifier = modifier
-            )
-
-            Aba.DIVIDAS -> TelaDividas(
-                dividas = dividas,
-                pagamentos = pagamentos,
-                onSalvar = { novaDivida ->
+                onPagar = { parcela ->
                     scope.launch {
-                        dividaDao.inserir(novaDivida)
-                        snackbarState.showSnackbar("Dívida registrada!")
-                    }
-                },
-                onExcluir = { divida ->
-                    scope.launch {
-                        dividaDao.deletar(divida)
-                        snackbarState.showSnackbar("Dívida apagada!")
-                    }
-                },
-                onRegistrarPagamento = { dividaId, valorPago ->
-                    scope.launch {
-                        try {
-                            val hoje = SimpleDateFormat(
-                                "dd/MM/yyyy", Locale("pt", "BR")
-                            ).format(Date())
-                            pagamentoDao.registrarPagamento(dividaId, valorPago, hoje)
-                            snackbarState.showSnackbar("Pagamento registrado!")
-                        } catch (e: Exception) {
-                            snackbarState.showSnackbar(
-                                "Não foi possível registrar: ${e.message ?: "erro desconhecido"}"
-                            )
+                        if (gastoDao.pagar(parcela.gastoId, parcela.numero, dataHoje()) == 1) {
+                            cancelarLembrete(context, parcela)
+                            snackbarState.showSnackbar("Pagamento registrado")
                         }
                     }
                 },
@@ -218,13 +189,11 @@ fun FluxoFinanceApp(
             )
 
             Aba.LANCAR -> TelaLancamento(
-                categoriasMaisUsadas = categoriasFrequentes(despesas.map { it.categoria }),
-                onSalvar = { despesa ->
-                    scope.launch {
-                        despesaDao.inserir(despesa)
-                        snackbarState.showSnackbar("Despesa salva!")
-                    }
-                    abaAtual = Aba.DESPESAS
+                categoriasMaisUsadas = categoriasFrequentes(registros.map { it.gasto.categoria }),
+                onSalvar = { gasto, quantidade, primeira ->
+                    gastoDao.registrar(gasto, quantidade, primeira)
+                    abaAtual = Aba.GASTOS
+                    scope.launch { snackbarState.showSnackbar("Gasto salvo") }
                 },
                 modifier = modifier
             )
