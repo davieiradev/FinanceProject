@@ -57,6 +57,9 @@ fun TelaDividas(
     var erroPagamento by rememberSaveable { mutableStateOf<String?>(null) }
     var historicoExpandidoId by rememberSaveable { mutableStateOf<Int?>(null) }
     val pagamentosPorDivida = remember(pagamentos) { pagamentos.groupBy { it.dividaId } }
+    var abrirSimulador by rememberSaveable {
+        mutableStateOf(false)
+    }
 
     Column(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)
@@ -125,6 +128,17 @@ fun TelaDividas(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Registrar Dívida")
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                abrirSimulador = true
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Simular juros")
         }
 
         Spacer(Modifier.height(24.dp))
@@ -291,6 +305,14 @@ fun TelaDividas(
             },
             dismissButton = {
                 TextButton(onClick = { paraExcluir = null }) { Text("Cancelar") }
+            }
+        )
+    }
+
+    if (abrirSimulador) {
+        SimuladorJurosDialog(
+            onFechar = {
+                abrirSimulador = false
             }
         )
     }

@@ -8,8 +8,13 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [Despesa::class, Divida::class, PagamentoDivida::class],
-    version = 6,
+    entities = [
+        Despesa::class,
+        Divida::class,
+        PagamentoDivida::class,
+        ProgressoLicao::class
+    ],
+    version = 7,
     exportSchema = false
 )
 abstract class AppDataBase : RoomDatabase() {
@@ -18,8 +23,10 @@ abstract class AppDataBase : RoomDatabase() {
     abstract fun dividaDao(): DividaDao
     abstract fun pagamentoDividaDao(): PagamentoDividaDao
 
+    abstract fun progressoLicaoDao(): ProgressoLicaoDao
+
     companion object {
-        // Mantemos as migrações existentes para preservar bancos mais antigos.
+
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 val temCategoria = db.query("PRAGMA table_info(tabela_despesas)").use { cursor ->
@@ -79,8 +86,7 @@ abstract class AppDataBase : RoomDatabase() {
                     "CREATE INDEX IF NOT EXISTS index_tabela_pagamentos_dividaId " +
                             "ON tabela_pagamentos(dividaId)"
                 )
-                // Dívidas antigas marcadas como pagas continuam com 100% de progresso.
-                // A data dos pagamentos anteriores é desconhecida (NULL).
+
                 db.execSQL(
                     """
                     INSERT INTO tabela_pagamentos (dividaId, valor, dataPagamento)
@@ -92,16 +98,11 @@ abstract class AppDataBase : RoomDatabase() {
             }
         }
 
-        // A versão 4 já possui a mesma estrutura da versão 6. Esta migração existe
-        // para permitir que instalações que já estavam na versão 4 avancem sem perda
-        // de dados, após a numeração ter sido corrigida.
+
         val MIGRATION_4_6 = object : Migration(4, 6) {
             override fun migrate(db: SupportSQLiteDatabase) = Unit
         }
 
-        // Algumas instalações foram executadas com uma versão 5 experimental, que
-        // mantinha despesas e dívidas, mas ainda não possuía a tabela de pagamentos.
-        // A migração cria apenas o que falta e preserva os registros existentes.
         val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(
@@ -137,6 +138,19 @@ abstract class AppDataBase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+            CREATE TABLE IF NOT EXISTS progresso_licoes (
+                licaoId INTEGER NOT NULL,
+                concluida INTEGER NOT NULL,
+                PRIMARY KEY(licaoId)
+            )
+        """.trimIndent())
+            }
+        }
+
+
         @Volatile
         private var INSTANCE: AppDataBase? = null
 
@@ -152,7 +166,8 @@ abstract class AppDataBase : RoomDatabase() {
                         MIGRATION_2_3,
                         MIGRATION_3_4,
                         MIGRATION_4_6,
-                        MIGRATION_5_6
+                        MIGRATION_5_6,
+                        MIGRATION_6_7
                     )
                     .build()
                 INSTANCE = instance

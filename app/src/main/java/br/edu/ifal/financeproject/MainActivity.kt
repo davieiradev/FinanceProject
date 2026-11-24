@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -47,7 +48,9 @@ enum class Aba(val titulo: String, val icone: ImageVector) {
     RESUMO("Resumo", Icons.Filled.Home),
     DESPESAS("Despesas", Icons.Filled.List),
     DIVIDAS("Dívidas", Icons.Filled.DateRange),
-    LANCAR("Lançar", Icons.Filled.Add)
+    LANCAR("Lançar", Icons.Filled.Add),
+
+    APRENDER("Aprender", Icons.Filled.Info)
 }
 
 class MainActivity : ComponentActivity() {
@@ -76,6 +79,9 @@ class MainActivity : ComponentActivity() {
         val dividaDao = banco.dividaDao()
         val pagamentoDao = banco.pagamentoDividaDao()
         val preferencias = LimitePreferencias(applicationContext)
+        val progressoDao = AppDataBase.getDatabase(
+            applicationContext
+        ).progressoLicaoDao()
 
         setContent {
             FinanceProjectTheme {
@@ -84,6 +90,7 @@ class MainActivity : ComponentActivity() {
                     dividaDao,
                     pagamentoDao,
                     preferencias,
+                    progressoDao = progressoDao,
                     notificacoesPermitidas = podeNotificar,
                     onSolicitarPermissaoDeNotificacao = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -108,7 +115,8 @@ fun FluxoFinanceApp(
     pagamentoDao: PagamentoDividaDao,
     preferencias: LimitePreferencias,
     notificacoesPermitidas: Boolean,
-    onSolicitarPermissaoDeNotificacao: () -> Unit
+    onSolicitarPermissaoDeNotificacao: () -> Unit,
+    progressoDao: ProgressoLicaoDao
 ) {
     var limite by remember { mutableStateOf(preferencias.ler()) }
     var abaAtual by rememberSaveable { mutableStateOf(Aba.RESUMO) }
@@ -124,6 +132,9 @@ fun FluxoFinanceApp(
     val fluxoPagamentos = remember(pagamentoDao) { pagamentoDao.listarTodos() }
     val pagamentos by fluxoPagamentos.collectAsState(initial = emptyList())
     val context = LocalContext.current
+
+    val fluxoProgresso = remember(progressoDao) { progressoDao.observarProgresso() }
+    val progresso by fluxoProgresso.collectAsState(initial = emptyList())
 
     LaunchedEffect(despesas, dividas, notificacoesPermitidas) {
         if (notificacoesPermitidas) {
@@ -214,6 +225,14 @@ fun FluxoFinanceApp(
                         snackbarState.showSnackbar("Despesa salva!")
                     }
                     abaAtual = Aba.DESPESAS
+                },
+                modifier = modifier
+            )
+
+            Aba.APRENDER -> TelaEducacaoFinanceira(
+                concluidas = progresso.filter { it.concluida }.map { it.licaoId }.toSet(),
+                onConcluir = { id ->
+                    scope.launch { progressoDao.marcarConcluida(ProgressoLicao(id)) }
                 },
                 modifier = modifier
             )
